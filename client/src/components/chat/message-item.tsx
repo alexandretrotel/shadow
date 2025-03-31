@@ -78,6 +78,7 @@ export const MessageItem = ({
 
   return (
     <div
+      id={`msg-${message.messageId}`}
       className={`mb-3 flex flex-col text-sm ${message.sender === username ? "items-end" : "items-start"}`}
     >
       <div
