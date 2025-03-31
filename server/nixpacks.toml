@@ -13,4 +13,4 @@ cmds = ["bun install"]
 cacheDirectories = ["/root/.bun"]
 
 [start]
-cmd = "bun run index.ts"
+cmd = "bun run src/index.ts"
