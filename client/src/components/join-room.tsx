@@ -57,11 +57,11 @@ export function JoinRoom({ onJoin }: JoinRoomProps) {
                 control={form.control}
                 name="roomName"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col gap-3">
                     <FormLabel>Room Name</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Room Name"
+                        placeholder="Shadow Realm"
                         {...field}
                         className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent border-none"
                       />
@@ -75,14 +75,15 @@ export function JoinRoom({ onJoin }: JoinRoomProps) {
                 name="password"
                 render={({ field }) => {
                   return (
-                    <FormItem>
+                    <FormItem className="flex flex-col gap-3">
                       <FormLabel>Secret Key</FormLabel>
                       <FormControl>
                         <div className="flex items-center gap-2">
                           <div className="relative w-full">
                             <Input
                               type={showPassword ? "text" : "password"}
-                              placeholder="Secret Key"
+                              placeholder="********"
+                              autoComplete="off"
                               {...field}
                               className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent border-none pr-10"
                             />
@@ -118,11 +119,11 @@ export function JoinRoom({ onJoin }: JoinRoomProps) {
                 control={form.control}
                 name="username"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Alias</FormLabel>
+                  <FormItem className="flex flex-col gap-3">
+                    <FormLabel>Pseudonym</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Alias"
+                        placeholder="John The Ripper"
                         {...field}
                         className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent border-none"
                       />
