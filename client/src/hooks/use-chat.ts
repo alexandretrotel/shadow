@@ -9,6 +9,7 @@ import { ChatActions, Message } from "@/types/chat";
 import { debounce } from "lodash";
 import { useChatStore } from "@/store/chat-store";
 import { useShallow } from "zustand/react/shallow";
+import { toast } from "sonner";
 
 export function useChat(): ChatActions {
   const {
@@ -23,6 +24,17 @@ export function useChat(): ChatActions {
   } = useChatStore();
 
   useEffect(() => {
+    if (roomName && username && !socketService.getKeyPair()) {
+      const keys = nacl.box.keyPair();
+      socketService.setKeyPair(keys);
+      socketService.joinRoom(
+        roomName,
+        "storedPassword",
+        username,
+        encodeBase64(keys.publicKey),
+      );
+    }
+
     const handlePublicKeys = ({
       username,
       publicKey,
@@ -82,7 +94,10 @@ export function useChat(): ChatActions {
       }
     };
 
-    const handleError = (msg: string) => alert(msg);
+    const handleError = (msg: string) => {
+      console.error(msg);
+      toast.error(msg);
+    };
 
     const handleTyping = (username: string) => {
       addTypingUser(username);
@@ -101,10 +116,10 @@ export function useChat(): ChatActions {
       socketService.getSocket().off("typing", handleTyping);
       socketService.disconnect();
     };
-  }, [addMessage, addTypingUser, removeTypingUser]);
+  }, [addMessage, addTypingUser, removeTypingUser, roomName, username]);
 
   const joinRoom = (roomName: string, password: string, username: string) => {
-    const keys = nacl.box.keyPair();
+    const keys = socketService.getKeyPair() || nacl.box.keyPair();
     socketService.setKeyPair(keys);
     socketService.joinRoom(
       roomName,
@@ -117,6 +132,10 @@ export function useChat(): ChatActions {
   };
 
   const sendMessage = (content: string, timer?: number) => {
+    if (!socketService.getKeyPair()) {
+      toast.error("Cannot send message: Encryption keys not initialized.");
+      return;
+    }
     const messageId = socketService.sendMessage(
       roomName,
       content,
@@ -140,6 +159,8 @@ export function useChat(): ChatActions {
           }));
         }, timer * 1000);
       }
+    } else {
+      toast.error("Failed to send message.");
     }
   };
 
