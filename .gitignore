@@ -1,6 +1,9 @@
 # dependencies (bun install)
 node_modules
 
+# feedyourai
+feedyourai.txt
+
 # output
 out
 dist
