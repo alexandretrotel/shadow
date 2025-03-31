@@ -61,7 +61,7 @@ export function JoinRoom({ onJoin }: JoinRoomProps) {
                     <FormLabel>Room Name</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Shadow Realm"
+                        placeholder="my-secret-room"
                         {...field}
                         className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent border-none"
                       />
