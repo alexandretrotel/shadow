@@ -1,6 +1,9 @@
 import { io, Socket } from "socket.io-client";
 import nacl from "tweetnacl";
-import { encode as encodeBase64 } from "@stablelib/base64";
+import {
+  encode as encodeBase64,
+  decode as decodeBase64,
+} from "@stablelib/base64";
 import { Message, Participant } from "@/types/chat";
 import { SERVER_URL } from "./server";
 
@@ -10,7 +13,35 @@ export class SocketService {
   private seenMessageIds = new Set<string>();
 
   constructor(url: string) {
-    this.socket = io(url);
+    this.socket = io(url, { autoConnect: false });
+    this.restoreKeyPair();
+    this.socket.connect();
+  }
+
+  private restoreKeyPair() {
+    const storedKeyPair = localStorage.getItem("chatKeyPair");
+    if (storedKeyPair) {
+      const { publicKey, secretKey } = JSON.parse(storedKeyPair);
+      this.keyPair = {
+        publicKey: decodeBase64(publicKey),
+        secretKey: decodeBase64(secretKey),
+      };
+    }
+  }
+
+  setKeyPair(keyPair: nacl.BoxKeyPair | null) {
+    this.keyPair = keyPair;
+    if (keyPair) {
+      localStorage.setItem(
+        "chatKeyPair",
+        JSON.stringify({
+          publicKey: encodeBase64(keyPair.publicKey),
+          secretKey: encodeBase64(keyPair.secretKey),
+        }),
+      );
+    } else {
+      localStorage.removeItem("chatKeyPair");
+    }
   }
 
   getSocket() {
@@ -101,10 +132,6 @@ export class SocketService {
 
   onTyping(callback: (username: string) => void) {
     this.socket.on("typing", ({ username }) => callback(username));
-  }
-
-  setKeyPair(keyPair: nacl.BoxKeyPair | null) {
-    this.keyPair = keyPair;
   }
 
   getKeyPair() {
