@@ -13,12 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { motion } from "motion/react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import VoiceMessage from "./voice-message";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
@@ -39,6 +34,7 @@ export const MessageItem = ({
 }: MessageItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const handleEdit = () => {
     onEdit(message.messageId, editContent);
@@ -87,24 +83,7 @@ export const MessageItem = ({
     }
 
     if (message.content.startsWith("[VOICE:")) {
-      const [prefix, content] = message.content.split("]");
-      const fileName = prefix.slice(7);
-      const fileData = decodeBase64(content);
-      const base64Data = encodeBase64(fileData);
-      const audioUrl = `data:audio/webm;base64,${base64Data}`;
-
-      return (
-        <div className="flex items-center gap-2">
-          <audio controls src={audioUrl} className="max-w-[300px]" />
-          <a
-            href={audioUrl}
-            download={fileName}
-            className="text-muted-foreground hover:text-accent flex items-center gap-1 text-xs"
-          >
-            <DownloadIcon className="size-3" /> Download
-          </a>
-        </div>
-      );
+      return <VoiceMessage content={message.content} />;
     }
 
     return <span className="text-foreground">{message.content}</span>;
@@ -173,41 +152,35 @@ export const MessageItem = ({
                   </Button>
                 </>
               )}
-              <Popover>
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-accent-foreground"
-                  >
-                    😊
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.1 }}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-accent-foreground"
+                    >
+                      😊
+                    </Button>
+                  </motion.div>
                 </PopoverTrigger>
-                <PopoverContent className="bg-popover text-popover-foreground flex w-fit gap-2 rounded-md border p-2 shadow-md">
-                  <motion.button
-                    whileHover={{ scale: 1.2 }}
-                    transition={{ duration: 0.2 }}
-                    onClick={() => onReact(message.messageId, "❤️")}
-                    className="text-lg"
-                  >
-                    ❤️
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.2 }}
-                    transition={{ duration: 0.2 }}
-                    onClick={() => onReact(message.messageId, "👍")}
-                    className="text-lg"
-                  >
-                    👍
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.2 }}
-                    transition={{ duration: 0.2 }}
-                    onClick={() => onReact(message.messageId, "😂")}
-                    className="text-lg"
-                  >
-                    😂
-                  </motion.button>
+                <PopoverContent className="bg-card text-popover-foreground w-fit rounded-md border p-2 shadow-md">
+                  <div className="flex gap-2">
+                    {["❤️", "👍", "😂", "😮", "😢"].map((reaction) => (
+                      <motion.button
+                        key={reaction}
+                        whileHover={{ scale: 1.3, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => {
+                          onReact(message.messageId, reaction);
+                          setPopoverOpen(false);
+                        }}
+                        className="text-lg"
+                      >
+                        {reaction}
+                      </motion.button>
+                    ))}
+                  </div>
                 </PopoverContent>
               </Popover>
             </div>
@@ -225,24 +198,17 @@ export const MessageItem = ({
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className={`mt-1 flex gap-2 ${message.sender === username ? "justify-end" : "justify-start"}`}
+          className={`mt-1 flex gap-1 ${message.sender === username ? "justify-end" : "justify-start"}`}
         >
-          {Object.entries(aggregatedReactions).map(
-            ([reaction, { count, senders }]) => (
-              <TooltipProvider key={reaction}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="bg-muted text-foreground flex items-center gap-1 rounded px-1.5 py-0.5 text-xs">
-                      {reaction} {count}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-popover text-popover-foreground rounded-md border p-2 shadow-md">
-                    {senders.join(", ")}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ),
-          )}
+          {Object.entries(aggregatedReactions).map(([reaction, { count }]) => (
+            <motion.span
+              whileHover={{ scale: 1.1 }}
+              className="bg-muted text-foreground flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 text-xs"
+              onClick={() => onReact(message.messageId, reaction)}
+            >
+              {reaction} {count}
+            </motion.span>
+          ))}
         </motion.div>
       )}
 

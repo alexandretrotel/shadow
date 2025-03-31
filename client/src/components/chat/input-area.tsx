@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { encode as encodeBase64 } from "@stablelib/base64";
@@ -14,10 +14,21 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
   const [input, setInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
 
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -36,6 +47,7 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
       const content = `[VOICE:${Date.now()}.webm]${encodeBase64(new Uint8Array(arrayBuffer))}`;
       onSend(content);
       stream.getTracks().forEach((track) => track.stop());
+      setRecordingDuration(0);
     };
 
     mediaRecorderRef.current.start();
@@ -90,15 +102,21 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
         </motion.div>
       )}
       <div className="flex items-center gap-2">
-        <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
+        <motion.div
+          transition={isRecording ? { repeat: Infinity, duration: 0.8 } : {}}
+        >
           <Button
             type="button"
             variant="ghost"
             size="icon"
             onClick={isRecording ? stopRecording : startRecording}
-            className={`text-muted-foreground hover:text-accent-foreground ${isRecording ? "animate-pulse" : ""}`}
+            className={`text-muted-foreground hover:text-accent-foreground ${isRecording ? "bg-accent/20" : ""}`}
           >
-            <MicIcon className="size-5" />
+            {isRecording ? (
+              <span className="text-xs">{recordingDuration}s</span>
+            ) : (
+              <MicIcon className="size-5" />
+            )}
           </Button>
         </motion.div>
         <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>

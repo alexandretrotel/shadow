@@ -23,7 +23,7 @@ function App() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="bg-background flex min-h-screen flex-col items-center justify-center gap-4 p-4"
+      className="md:bg-background bg-card flex min-h-screen flex-col items-center justify-center gap-4 md:p-4"
     >
       {!roomName ? (
         <JoinRoom onJoin={joinRoom} />
