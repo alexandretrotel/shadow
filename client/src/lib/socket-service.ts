@@ -179,6 +179,20 @@ export class SocketService {
     });
   }
 
+  reactToMessage(roomName: string, messageId: string, reaction: string) {
+    this.socket.emit("reactToMessage", { roomName, messageId, reaction });
+  }
+
+  onMessageReaction(
+    callback: (data: {
+      messageId: string;
+      sender: string;
+      reaction: string;
+    }) => void,
+  ) {
+    this.socket.on("messageReaction", callback);
+  }
+
   deleteMessage(roomName: string, messageId: string) {
     this.socket.emit("deleteMessage", { roomName, messageId });
   }

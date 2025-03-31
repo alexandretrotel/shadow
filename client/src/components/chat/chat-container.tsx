@@ -18,9 +18,11 @@ export const ChatContainer = ({
   sendTyping,
   editMessage,
   deleteMessage,
+  reactToMessage,
 }: ChatRoomProps & {
   editMessage: (messageId: string, content: string) => void;
   deleteMessage: (messageId: string) => void;
+  reactToMessage: (messageId: string, reaction: string) => void;
 }) => {
   const scrollToMessage = (messageId: string) => {
     const element = document.getElementById(`msg-${messageId}`);
@@ -48,6 +50,7 @@ export const ChatContainer = ({
           typingUsers={typingUsers}
           onEdit={editMessage}
           onDelete={deleteMessage}
+          onReact={reactToMessage}
         />
         <InputArea onSend={onSend} sendTyping={sendTyping} />
       </Card>

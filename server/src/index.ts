@@ -75,6 +75,14 @@ io.on("connection", (socket) => {
     io.to(roomName).emit("messageDeleted", { messageId });
   });
 
+  socket.on("reactToMessage", ({ roomName, messageId, reaction }) => {
+    io.to(roomName).emit("messageReaction", {
+      messageId,
+      sender: socket.id,
+      reaction,
+    });
+  });
+
   socket.on("leaveRoom", ({ roomName }) => {
     socket.leave(roomName);
     const room = rooms.get(roomName);

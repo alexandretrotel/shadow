@@ -47,6 +47,24 @@ export function useChat(): ChatActions {
     }));
   };
 
+  const reactToMessage = (messageId: string, reaction: string) => {
+    socketService.reactToMessage(roomName, messageId, reaction);
+    useChatStore.setState((state) => ({
+      ...state,
+      messages: state.messages.map((msg) =>
+        msg.messageId === messageId
+          ? {
+              ...msg,
+              reactions: [
+                ...(msg.reactions || []),
+                { sender: username, reaction },
+              ],
+            }
+          : msg,
+      ),
+    }));
+  };
+
   useEffect(() => {
     if (roomName && username && !socketService.getKeyPair()) {
       const keys = nacl.box.keyPair();
@@ -185,6 +203,28 @@ export function useChat(): ChatActions {
       }));
     };
 
+    const handleMessageReaction = ({
+      messageId,
+      sender,
+      reaction,
+    }: {
+      messageId: string;
+      sender: string;
+      reaction: string;
+    }) => {
+      useChatStore.setState((state) => ({
+        ...state,
+        messages: state.messages.map((msg) =>
+          msg.messageId === messageId
+            ? {
+                ...msg,
+                reactions: [...(msg.reactions || []), { sender, reaction }],
+              }
+            : msg,
+        ),
+      }));
+    };
+
     socketService.onPublicKeys(handlePublicKeys);
     socketService.onMessage(handleMessage);
     socketService.onError(handleError);
@@ -192,6 +232,7 @@ export function useChat(): ChatActions {
     socketService.onMessageStatus(handleMessageStatus);
     socketService.onMessageEdited(handleMessageEdited);
     socketService.onMessageDeleted(handleMessageDeleted);
+    socketService.onMessageReaction(handleMessageReaction);
 
     return () => {
       socketService.getSocket().off("publicKeys", handlePublicKeys);
@@ -201,6 +242,7 @@ export function useChat(): ChatActions {
       socketService.getSocket().off("messageStatus", handleMessageStatus);
       socketService.getSocket().off("messageEdited", handleMessageEdited);
       socketService.getSocket().off("messageDeleted", handleMessageDeleted);
+      socketService.getSocket().off("messageReaction", handleMessageReaction);
 
       socketService.disconnect();
     };
@@ -277,6 +319,7 @@ export function useChat(): ChatActions {
     getKeyFingerprint,
     editMessage,
     deleteMessage,
+    reactToMessage,
   };
 }
 

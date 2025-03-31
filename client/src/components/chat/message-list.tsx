@@ -10,6 +10,7 @@ interface MessageListProps {
   typingUsers: string[];
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
+  onReact: (messageId: string, reaction: string) => void;
 }
 
 export const MessageList = ({
@@ -18,6 +19,7 @@ export const MessageList = ({
   typingUsers,
   onEdit,
   onDelete,
+  onReact,
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +44,7 @@ export const MessageList = ({
                 username={username}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onReact={onReact}
               />
             </motion.div>
           ))}

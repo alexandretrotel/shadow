@@ -2,12 +2,23 @@ import {
   encode as encodeBase64,
   decode as decodeBase64,
 } from "@stablelib/base64";
-import { DownloadIcon } from "lucide-react";
+import { DownloadIcon, EditIcon, TrashIcon } from "lucide-react";
 import { Message } from "@/types/chat";
 import { useState } from "react";
-import { EditIcon, TrashIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { motion } from "motion/react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
@@ -16,6 +27,7 @@ interface MessageItemProps {
   username: string;
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
+  onReact: (messageId: string, reaction: string) => void;
 }
 
 export const MessageItem = ({
@@ -23,6 +35,7 @@ export const MessageItem = ({
   username,
   onEdit,
   onDelete,
+  onReact,
 }: MessageItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
@@ -47,9 +60,7 @@ export const MessageItem = ({
         return (
           <div className="flex flex-col gap-1">
             <img
-              src={`data:image/${fileName
-                .split(".")
-                .pop()};base64,${base64Data}`}
+              src={`data:image/${fileName.split(".").pop()};base64,${base64Data}`}
               alt={fileName}
               className="max-w-[300px] rounded-md"
             />
@@ -99,6 +110,18 @@ export const MessageItem = ({
     return <span className="text-foreground">{message.content}</span>;
   };
 
+  const aggregatedReactions = message.reactions?.reduce(
+    (acc, { sender, reaction }) => {
+      if (!acc[reaction]) {
+        acc[reaction] = { count: 0, senders: [] };
+      }
+      acc[reaction].count += 1;
+      acc[reaction].senders.push(sender);
+      return acc;
+    },
+    {} as Record<string, { count: number; senders: string[] }>,
+  );
+
   return (
     <div
       id={`msg-${message.messageId}`}
@@ -131,24 +154,63 @@ export const MessageItem = ({
         ) : (
           <>
             {renderContent()}
-            {message.sender === username && (
-              <div className="mt-1 flex gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <EditIcon className="size-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(message.messageId)}
-                >
-                  <TrashIcon className="size-4" />
-                </Button>
-              </div>
-            )}
+            <div className="mt-1 flex items-center gap-2">
+              {message.sender === username && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <EditIcon className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(message.messageId)}
+                  >
+                    <TrashIcon className="size-4" />
+                  </Button>
+                </>
+              )}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-accent-foreground"
+                  >
+                    😊
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="bg-popover text-popover-foreground flex w-fit gap-2 rounded-md border p-2 shadow-md">
+                  <motion.button
+                    whileHover={{ scale: 1.2 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => onReact(message.messageId, "❤️")}
+                    className="text-lg"
+                  >
+                    ❤️
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.2 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => onReact(message.messageId, "👍")}
+                    className="text-lg"
+                  >
+                    👍
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.2 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => onReact(message.messageId, "😂")}
+                    className="text-lg"
+                  >
+                    😂
+                  </motion.button>
+                </PopoverContent>
+              </Popover>
+            </div>
           </>
         )}
         {message.timer && (
@@ -157,6 +219,33 @@ export const MessageItem = ({
           </span>
         )}
       </div>
+
+      {aggregatedReactions && (
+        <motion.div
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className={`mt-1 flex gap-2 ${message.sender === username ? "justify-end" : "justify-start"}`}
+        >
+          {Object.entries(aggregatedReactions).map(
+            ([reaction, { count, senders }]) => (
+              <TooltipProvider key={reaction}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="bg-muted text-foreground flex items-center gap-1 rounded px-1.5 py-0.5 text-xs">
+                      {reaction} {count}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-popover text-popover-foreground rounded-md border p-2 shadow-md">
+                    {senders.join(", ")}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ),
+          )}
+        </motion.div>
+      )}
+
       <span className="text-muted-foreground mt-1 text-xs">
         {message.status === "sent" && "✓ Sent"}
         {message.status === "delivered" && "✓✓ Delivered"}

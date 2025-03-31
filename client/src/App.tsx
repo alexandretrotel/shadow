@@ -15,6 +15,7 @@ function App() {
     sendTyping,
     editMessage,
     deleteMessage,
+    reactToMessage,
   } = useChat();
 
   return (
@@ -39,6 +40,7 @@ function App() {
           sendTyping={sendTyping}
           editMessage={editMessage}
           deleteMessage={deleteMessage}
+          reactToMessage={reactToMessage}
         />
       )}
     </motion.div>

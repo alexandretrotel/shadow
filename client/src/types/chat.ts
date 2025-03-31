@@ -6,6 +6,7 @@ export interface Message {
   timer?: number;
   status: "sent" | "delivered" | "read" | "failed";
   messageId: string;
+  reactions?: { sender: string; reaction: string }[];
 }
 
 export interface Participant {
@@ -29,6 +30,7 @@ export interface ChatActions {
   getKeyFingerprint: (key: Uint8Array) => string;
   editMessage: (messageId: string, content: string) => void;
   deleteMessage: (messageId: string) => void;
+  reactToMessage: (messageId: string, reaction: string) => void;
 }
 
 export interface ChatRoomProps {
