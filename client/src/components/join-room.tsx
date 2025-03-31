@@ -27,9 +27,9 @@ export function JoinRoom({ onJoin }: JoinRoomProps) {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="w-full"
     >
-      <Card className=" max-w-md mx-auto mt-10 shadow-lg border-none">
+      <Card className="mx-auto mt-10 max-w-md border-none shadow-lg">
         <CardHeader>
-          <CardTitle className="text-lg text-secondary-foreground tracking-wide">
+          <CardTitle className="text-secondary-foreground text-lg tracking-wide">
             Enter the Shadows
           </CardTitle>
         </CardHeader>
@@ -39,20 +39,20 @@ export function JoinRoom({ onJoin }: JoinRoomProps) {
               placeholder="Room Name"
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
-              className="bg-muted text-foreground placeholder-muted-foreground border-none focus:ring-accent"
+              className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent border-none"
             />
             <Input
               type="password"
               placeholder="Secret Key"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-muted text-foreground placeholder-muted-foreground border-none focus:ring-accent"
+              className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent border-none"
             />
             <Input
               placeholder="Alias"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="bg-muted text-foreground placeholder-muted-foreground border-none focus:ring-accent"
+              className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent border-none"
             />
             <motion.div
               whileHover={{ scale: 1.05 }}
@@ -60,7 +60,7 @@ export function JoinRoom({ onJoin }: JoinRoomProps) {
             >
               <Button
                 type="submit"
-                className="w-full bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground"
+                className="bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground w-full"
               >
                 Join
               </Button>

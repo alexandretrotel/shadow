@@ -16,9 +16,9 @@ export const Participants = ({
   onLeave,
   getKeyFingerprint,
 }: ParticipantsProps) => (
-  <CardHeader className="flex-shrink-0 border-b border-muted pt-6">
-    <div className="flex justify-between items-center">
-      <CardTitle className="text-lg text-secondary-foreground tracking-wide">
+  <CardHeader className="border-muted flex-shrink-0 border-b pt-6">
+    <div className="flex items-center justify-between">
+      <CardTitle className="text-secondary-foreground text-lg tracking-wide">
         Room: {roomName}
       </CardTitle>
       <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
@@ -33,14 +33,14 @@ export const Participants = ({
       </motion.div>
     </div>
     {participants.length > 0 && (
-      <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-2">
+      <div className="text-muted-foreground mt-1 flex flex-wrap gap-2 text-xs">
         {participants.map((p) => (
           <motion.span
             key={p.username}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="bg-muted px-2 py-1 rounded"
+            className="bg-muted rounded px-2 py-1"
           >
             {p.username} ({getKeyFingerprint(p.publicKey)})
           </motion.span>

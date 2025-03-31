@@ -17,7 +17,7 @@ function App() {
   } = useChat();
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="bg-background flex min-h-screen items-center justify-center p-4">
       {!roomName ? (
         <JoinRoom onJoin={joinRoom} />
       ) : (

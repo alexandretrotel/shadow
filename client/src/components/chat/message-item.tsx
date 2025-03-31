@@ -37,7 +37,7 @@ export const MessageItem = ({ message, username }: MessageItemProps) => {
             <a
               href={dataUrl}
               download={fileName}
-              className="text-xs text-muted-foreground hover:text-accent flex items-center gap-1"
+              className="text-muted-foreground hover:text-accent flex items-center gap-1 text-xs"
             >
               <DownloadIcon className="size-3" /> Download {fileName}
             </a>
@@ -48,7 +48,7 @@ export const MessageItem = ({ message, username }: MessageItemProps) => {
         <a
           href={dataUrl}
           download={fileName}
-          className="text-accent-foreground underline hover:text-accent flex items-center gap-1"
+          className="text-accent-foreground hover:text-accent flex items-center gap-1 underline"
         >
           📎 {fileName}
         </a>
@@ -59,28 +59,28 @@ export const MessageItem = ({ message, username }: MessageItemProps) => {
 
   return (
     <div
-      className={`mb-3 text-sm flex flex-col ${
+      className={`mb-3 flex flex-col text-sm ${
         message.sender === username ? "items-end" : "items-start"
       }`}
     >
       <div
-        className={`max-w-[70%] p-2 rounded-lg ${
+        className={`max-w-[70%] rounded-lg p-2 ${
           message.sender === username
             ? "bg-secondary text-secondary-foreground"
             : "bg-card text-foreground"
         }`}
       >
-        <span className="font-mono text-xs text-muted-foreground">
+        <span className="text-muted-foreground font-mono text-xs">
           {message.sender === username ? "You" : message.sender}:
         </span>{" "}
         {renderContent()}
         {message.timer && (
-          <span className="text-xs text-muted-foreground ml-2">
+          <span className="text-muted-foreground ml-2 text-xs">
             ({message.timer}s)
           </span>
         )}
       </div>
-      <span className="text-xs text-muted-foreground mt-1">
+      <span className="text-muted-foreground mt-1 text-xs">
         {message.status}
       </span>
     </div>

@@ -98,7 +98,7 @@ export const ChatRoom = memo(function ChatRoom({
             <a
               href={dataUrl}
               download={fileName}
-              className="text-xs text-muted-foreground hover:text-accent flex items-center gap-1"
+              className="text-muted-foreground hover:text-accent flex items-center gap-1 text-xs"
             >
               <DownloadIcon className="size-3" /> Download {fileName}
             </a>
@@ -110,7 +110,7 @@ export const ChatRoom = memo(function ChatRoom({
         <a
           href={dataUrl}
           download={fileName}
-          className="text-accent-foreground underline hover:text-accent flex items-center gap-1"
+          className="text-accent-foreground hover:text-accent flex items-center gap-1 underline"
         >
           📎 {fileName}
         </a>
@@ -121,10 +121,10 @@ export const ChatRoom = memo(function ChatRoom({
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto  shadow-lg border-none gap-0 py-0 flex flex-col h-[85vh]">
-      <CardHeader className="flex-shrink-0 border-b border-muted pt-6">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg text-secondary-foreground tracking-wide">
+    <Card className="mx-auto flex h-[85vh] w-full max-w-3xl flex-col gap-0 border-none py-0 shadow-lg">
+      <CardHeader className="border-muted flex-shrink-0 border-b pt-6">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-secondary-foreground text-lg tracking-wide">
             Room: {roomName}
           </CardTitle>
           <Button
@@ -137,48 +137,48 @@ export const ChatRoom = memo(function ChatRoom({
           </Button>
         </div>
         {participants.length > 0 && (
-          <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-2">
+          <div className="text-muted-foreground mt-1 flex flex-wrap gap-2 text-xs">
             {participants.map((p) => (
-              <span key={p.username} className="bg-muted px-2 py-1 rounded">
+              <span key={p.username} className="bg-muted rounded px-2 py-1">
                 {p.username} ({getKeyFingerprint(p.publicKey)})
               </span>
             ))}
           </div>
         )}
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col p-0">
-        <div className="flex-grow overflow-y-auto p-4 bg-muted">
+      <CardContent className="flex flex-grow flex-col p-0">
+        <div className="bg-muted flex-grow overflow-y-auto p-4">
           {messages.map((msg) => (
             <div
               key={msg.messageId}
-              className={`mb-3 text-sm flex flex-col ${
+              className={`mb-3 flex flex-col text-sm ${
                 msg.sender === username ? "items-end" : "items-start"
               }`}
             >
               <div
-                className={`max-w-[70%] p-2 rounded-lg ${
+                className={`max-w-[70%] rounded-lg p-2 ${
                   msg.sender === username
                     ? "bg-secondary text-secondary-foreground"
                     : "bg-card text-foreground"
                 }`}
               >
-                <span className="font-mono text-xs text-muted-foreground">
+                <span className="text-muted-foreground font-mono text-xs">
                   {msg.sender === username ? "You" : msg.sender}:
                 </span>{" "}
                 {renderMessage(msg)}
                 {msg.timer && (
-                  <span className="text-xs text-muted-foreground ml-2">
+                  <span className="text-muted-foreground ml-2 text-xs">
                     ({msg.timer}s)
                   </span>
                 )}
               </div>
-              <span className="text-xs text-muted-foreground mt-1">
+              <span className="text-muted-foreground mt-1 text-xs">
                 {msg.status}
               </span>
             </div>
           ))}
           {typingUsers.length > 0 && (
-            <div className="text-xs text-muted-foreground italic">
+            <div className="text-muted-foreground text-xs italic">
               {typingUsers.join(", ")} typing...
             </div>
           )}
@@ -186,11 +186,11 @@ export const ChatRoom = memo(function ChatRoom({
         </div>
         <form
           onSubmit={handleSend}
-          className="flex-shrink-0 p-4 border-t border-muted flex flex-col gap-2"
+          className="border-muted flex flex-shrink-0 flex-col gap-2 border-t p-4"
         >
           {file && (
-            <div className="flex items-center gap-2 bg-muted p-2 rounded">
-              <span className="text-sm text-foreground truncate">
+            <div className="bg-muted flex items-center gap-2 rounded p-2">
+              <span className="text-foreground truncate text-sm">
                 📎 {file.name}
               </span>
               <Button
@@ -226,7 +226,7 @@ export const ChatRoom = memo(function ChatRoom({
                 setInput(e.target.value);
                 sendTyping();
               }}
-              className="flex-grow bg-muted text-foreground placeholder-muted-foreground border-none focus:ring-accent"
+              className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent flex-grow border-none"
             />
             <Button
               type="submit"

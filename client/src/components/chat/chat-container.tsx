@@ -22,7 +22,7 @@ export const ChatContainer = ({
     transition={{ duration: 0.5 }}
     className="w-full"
   >
-    <Card className="w-full max-w-3xl mx-auto shadow-lg border-none gap-0 py-0 flex flex-col h-[85vh]">
+    <Card className="mx-auto flex h-[85vh] w-full max-w-3xl flex-col gap-0 border-none py-0 shadow-lg">
       <Participants
         roomName={roomName}
         participants={participants}

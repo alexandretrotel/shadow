@@ -35,16 +35,16 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
   return (
     <form
       onSubmit={handleSend}
-      className="flex-shrink-0 p-4 border-t border-muted flex flex-col gap-2"
+      className="border-muted flex flex-shrink-0 flex-col gap-2 border-t p-4"
     >
       {file && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.2 }}
-          className="flex items-center gap-2 bg-muted p-2 rounded"
+          className="bg-muted flex items-center gap-2 rounded p-2"
         >
-          <span className="text-sm text-foreground truncate">
+          <span className="text-foreground truncate text-sm">
             📎 {file.name}
           </span>
           <Button
@@ -87,7 +87,7 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
               setInput(e.target.value);
               sendTyping();
             }}
-            className="flex-grow bg-muted text-foreground placeholder-muted-foreground border-none focus:ring-accent"
+            className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent flex-grow border-none"
           />
         </motion.div>
         <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>

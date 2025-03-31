@@ -76,7 +76,7 @@ html {
   }
   input,
   textarea {
-    @apply bg-input border-border placeholder-muted-foreground focus:ring-2 focus:ring-ring;
+    @apply bg-input border-border placeholder-muted-foreground focus:ring-ring focus:ring-2;
   }
   button {
     @apply transition-colors duration-200;

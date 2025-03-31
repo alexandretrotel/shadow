@@ -22,8 +22,8 @@ export const MessageList = ({
   }, [messages]);
 
   return (
-    <CardContent className="flex-grow flex flex-col p-0">
-      <div className="flex-grow overflow-y-auto p-4 bg-muted">
+    <CardContent className="flex flex-grow flex-col p-0">
+      <div className="bg-muted flex-grow overflow-y-auto p-4">
         {messages.map((msg) => (
           <motion.div
             key={msg.messageId}
@@ -39,7 +39,7 @@ export const MessageList = ({
           </motion.div>
         ))}
         {typingUsers.length > 0 && (
-          <div className="text-xs text-muted-foreground italic">
+          <div className="text-muted-foreground text-xs italic">
             {typingUsers.join(", ")} typing...
           </div>
         )}
