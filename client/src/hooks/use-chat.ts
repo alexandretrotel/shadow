@@ -26,11 +26,18 @@ export function useChat(): ChatActions {
   useEffect(() => {
     socketService.onPublicKeys(({ username, publicKey }) => {
       const pubKey = decodeBase64(publicKey);
-      setParticipants(
-        participants.some((p) => p.username === username)
-          ? participants
-          : [...participants, { username, publicKey: pubKey }],
-      );
+
+      useChatStore.setState((state) => {
+        const alreadyExists = state.participants.some(
+          (p) => p.username === username,
+        );
+        return {
+          ...state,
+          participants: alreadyExists
+            ? state.participants
+            : [...state.participants, { username, publicKey: pubKey }],
+        };
+      });
     });
 
     socketService.onMessage((msg) => {
@@ -153,12 +160,11 @@ export function useChat(): ChatActions {
   };
 }
 
-export const useChatState = () => {
-  return useChatStore((state) => ({
+export const useChatState = () =>
+  useChatStore((state) => ({
     roomName: state.roomName,
     username: state.username,
     messages: state.messages,
     participants: state.participants,
     typingUsers: state.typingUsers,
   }));
-};
