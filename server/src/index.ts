@@ -1,36 +1,40 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import type { Room } from "./types";
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server, { cors: { origin: "http://localhost:5173" } });
 
 app.get("/", (_, res) => {
-  res.status(200).send("OK");
+  res.send("Server is running");
 });
 
-const rooms = new Map<string, { password: string; sockets: string[] }>();
+const rooms = new Map<string, Room>();
 
 io.on("connection", (socket) => {
+  console.log(`Socket ${socket.id} connected`);
+
   socket.on("joinRoom", ({ roomName, password, username, publicKey }) => {
-    // Check if the room exists and if not, create it
     if (!rooms.has(roomName)) {
       rooms.set(roomName, { password, sockets: [] });
     }
-
-    // Check if the room password is correct
-    if (rooms.get(roomName)?.password === password) {
-      socket.join(roomName);
-      rooms.get(roomName)?.sockets.push(socket.id);
-      io.to(roomName).emit("publicKeys", { username, publicKey });
-    } else {
-      socket.emit("error", "Invalid password");
+    const room = rooms.get(roomName);
+    if (!room) {
+      socket.emit("error", "Room not found");
+      return;
     }
+    if (room?.password !== password) {
+      socket.emit("error", "Invalid password");
+      return;
+    }
+    socket.join(roomName);
+    room.sockets.push(socket.id);
+    io.to(roomName).emit("publicKeys", { username, publicKey });
   });
 
   socket.on("message", ({ roomName, encryptedContent, timer, messageId }) => {
-    // Send the encrypted message to all sockets in the room
     io.to(roomName).emit("message", {
       sender: socket.id,
       encryptedContent,
@@ -40,12 +44,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("typing", ({ roomName, username }) => {
-    // Notify all sockets in the room that someone is typing
-    io.to(roomName).emit("typing", { username });
+    socket.to(roomName).emit("typing", { username });
   });
 
   socket.on("leaveRoom", ({ roomName }) => {
-    // Remove the socket from the room
     socket.leave(roomName);
     const room = rooms.get(roomName);
     if (room) {
@@ -55,12 +57,15 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    // Remove the socket from all rooms it was in
-    for (const [roomName, data] of rooms) {
-      data.sockets = data.sockets.filter((id) => id !== socket.id);
-      if (data.sockets.length === 0) rooms.delete(roomName);
+    console.log(`Socket ${socket.id} disconnected`);
+    for (const [roomName, room] of rooms) {
+      room.sockets = room.sockets.filter((id) => id !== socket.id);
+      if (room.sockets.length === 0) rooms.delete(roomName);
     }
   });
+
+  socket.on("error", (err) => console.error(`Socket error: ${err}`));
 });
 
-server.listen(3000, () => console.log("Server running on port 3000"));
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

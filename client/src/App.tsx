@@ -1,6 +1,6 @@
-import { JoinRoom } from "./components/join-room";
-import { ChatRoom } from "./components/chatroom";
-import { useChat } from "./hooks/use-chat";
+import { JoinRoom } from "@/components/join-room";
+import { ChatContainer } from "@/components/chat/chat-container";
+import { useChat } from "@/hooks/use-chat";
 
 function App() {
   const {
@@ -21,7 +21,7 @@ function App() {
       {!roomName ? (
         <JoinRoom onJoin={joinRoom} />
       ) : (
-        <ChatRoom
+        <ChatContainer
           roomName={roomName}
           username={username}
           messages={messages}
