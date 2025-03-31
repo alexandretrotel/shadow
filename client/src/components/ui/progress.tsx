@@ -18,7 +18,7 @@ function Progress({
     <ProgressPrimitive.Root
       data-slot="progress"
       className={cn(
-        muted ? "bg-muted/20" : "bg-primary/20", // Conditional background color
+        muted ? "bg-muted/20" : "bg-primary/20",
         "relative h-2 w-full overflow-hidden rounded-full",
         className,
       )}
@@ -27,7 +27,7 @@ function Progress({
       <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
         className={cn(
-          muted ? "bg-muted" : "bg-primary", // Conditional indicator color
+          muted ? "bg-muted" : "bg-primary",
           "h-full w-full flex-1 transition-all",
         )}
         style={{ transform: `translateX(-${100 - (value || 0)}%)` }}

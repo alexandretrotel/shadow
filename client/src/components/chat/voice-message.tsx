@@ -49,7 +49,7 @@ const VoiceMessage = ({ content }: VoiceMessageProps) => {
   };
 
   return (
-    <div className="bg-card flex w-full min-w-[400px] items-center gap-3 rounded-lg p-2 pr-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-lg p-2 pr-4 shadow-sm">
       <Button
         variant="ghost"
         size="icon"

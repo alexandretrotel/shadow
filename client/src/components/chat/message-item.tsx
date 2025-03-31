@@ -2,12 +2,12 @@ import {
   encode as encodeBase64,
   decode as decodeBase64,
 } from "@stablelib/base64";
-import { DownloadIcon } from "lucide-react";
+import { DownloadIcon, Edit2Icon, XIcon } from "lucide-react";
 import { Message } from "@/types/chat";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import VoiceMessage from "./voice-message";
 import { cn } from "@/lib/utils";
 import { featureFlags, isFeatureEnabled } from "@/lib/features";
@@ -26,9 +26,11 @@ export const MessageItem = ({
   message,
   username,
   onEdit,
+  onDelete,
 }: MessageItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
+  const [isHovered, setIsHovered] = useState(false);
 
   const isOwnMessage = message.sender === username;
 
@@ -52,22 +54,22 @@ export const MessageItem = ({
 
       if (isImageFile(fileName)) {
         return (
-          <div className="flex flex-col gap-2">
+          <motion.div whileHover={{ scale: 1.02 }} className="group relative">
             <img
               src={`data:image/${fileName.split(".").pop()};base64,${base64Data}`}
               alt={fileName}
-              className="max-w-[300px] rounded-lg shadow-md"
+              className="max-w-[300px] rounded-lg shadow-md transition-all duration-200"
             />
             {featureFlags.enableImageDownload && (
               <a
                 href={dataUrl}
                 download={fileName}
-                className="text-muted-foreground hover:text-primary-foreground flex items-center gap-1 text-xs"
+                className="bg-background/80 absolute right-2 bottom-2 rounded-full p-2 opacity-0 transition-opacity group-hover:opacity-100"
               >
-                <DownloadIcon className="mr-1 size-3" /> {fileName}
+                <DownloadIcon className="text-muted-foreground size-4" />
               </a>
             )}
-          </div>
+          </motion.div>
         );
       }
     }
@@ -101,13 +103,15 @@ export const MessageItem = ({
 
       if (!isImageFile(fileName)) {
         return (
-          <a
+          <motion.a
             href={dataUrl}
             download={fileName}
-            className="text-primary flex items-center gap-1 text-sm hover:underline"
+            whileHover={{ x: 2 }}
+            className="text-primary bg-background/50 hover:bg-background/80 flex items-center gap-2 rounded-md px-3 py-1 text-sm transition-colors"
           >
-            📎 {fileName}
-          </a>
+            <DownloadIcon className="size-4" />
+            <span>{fileName}</span>
+          </motion.a>
         );
       }
     }
@@ -121,86 +125,140 @@ export const MessageItem = ({
   return (
     <motion.div
       id={`msg-${message.messageId}`}
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "mb-4 flex flex-col gap-1",
+        "mb-4 flex flex-col gap-2",
         isOwnMessage ? "items-end" : "items-start",
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {imageContent && (
-        <div
-          className={cn("max-w-[80%]", isOwnMessage ? "ml-auto" : "mr-auto")}
-        >
-          {imageContent}
-        </div>
-      )}
-      {voiceContent && (
-        <div
-          className={cn("max-w-[80%]", isOwnMessage ? "ml-auto" : "mr-auto")}
-        >
-          {voiceContent}
-        </div>
-      )}
-      {textContent && (
+      {(imageContent || voiceContent || textContent) && (
         <div
           className={cn(
-            "max-w-[80%] rounded-xl p-4 shadow-md transition-all duration-200",
-            isOwnMessage
-              ? "bg-primary text-primary-foreground"
-              : "bg-card text-foreground border-border border",
+            "max-w-[80%]",
+            isOwnMessage ? "ml-auto" : "mr-auto",
+            voiceContent && "w-full max-w-[400px]",
           )}
         >
-          <div className="flex flex-col gap-2">
-            <span className="text-muted-foreground font-mono text-xs opacity-80">
-              {!isOwnMessage && message.sender}
-            </span>
-            {isFeatureEnabled("enableEditDelete") &&
-            isEditing &&
-            isOwnMessage ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="bg-background text-foreground border-border w-full"
-                />
-                <Button variant="ghost" size="sm" onClick={handleEdit}>
-                  Save
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsEditing(false)}
-                >
-                  Cancel
-                </Button>
+          {imageContent}
+          {voiceContent}
+          {textContent && (
+            <motion.div
+              className={cn(
+                "relative rounded-xl p-2 px-4 shadow-md transition-all duration-200",
+                isOwnMessage
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-foreground border-border border",
+              )}
+              whileHover={{ boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
+            >
+              <div className="flex flex-col gap-2">
+                {!isOwnMessage && (
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {message.sender}
+                  </span>
+                )}
+                <AnimatePresence mode="wait">
+                  {isEditing && isOwnMessage ? (
+                    <motion.div
+                      key="edit"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center gap-2"
+                    >
+                      <Input
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        className="bg-background text-foreground border-border w-full"
+                      />
+                      <Button size="sm" onClick={handleEdit}>
+                        Save
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsEditing(false)}
+                      >
+                        <XIcon className="size-4" />
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="content"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      {textContent}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                {message.timer && (
+                  <span className="text-muted-foreground mt-1 text-xs opacity-70">
+                    Self-destructs in {message.timer}s
+                  </span>
+                )}
               </div>
-            ) : (
-              <div>{textContent}</div>
+
+              {isFeatureEnabled("enableEditDelete") && isOwnMessage && (
+                <AnimatePresence>
+                  {isHovered && !isEditing && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute -top-2 right-2 flex gap-1"
+                    >
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="bg-background/80 h-6 w-6 p-0"
+                        onClick={() => setIsEditing(true)}
+                      >
+                        <Edit2Icon className="size-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="bg-background/80 h-6 w-6 p-0"
+                        onClick={() => onDelete(message.messageId)}
+                      >
+                        <XIcon className="size-3" />
+                      </Button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              )}
+            </motion.div>
+          )}
+
+          <motion.div
+            className={cn(
+              "mt-1 flex items-center gap-2 text-xs",
+              isOwnMessage ? "justify-end" : "justify-start",
             )}
-            {message.timer && (
-              <span className="text-muted-foreground mt-1 text-xs opacity-70">
-                Self-destructs in {message.timer}s
-              </span>
-            )}
-          </div>
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.7 }}
+          >
+            <span
+              className={cn(
+                "font-mono",
+                message.status === "failed" && "text-destructive",
+                message.status === "read" && "text-blue-500",
+              )}
+            >
+              {message.status === "sent" && "✓ Sent"}
+              {message.status === "delivered" && "✓✓ Delivered"}
+              {message.status === "read" && "✓✓ Read"}
+              {message.status === "failed" && "✗ Failed"}
+            </span>
+          </motion.div>
         </div>
       )}
-
-      <div
-        className={cn(
-          "mt-1 flex items-center gap-2",
-          isOwnMessage ? "justify-end" : "justify-start",
-        )}
-      >
-        <span className="text-muted-foreground text-xs opacity-70">
-          {message.status === "sent" && "✓ Sent"}
-          {message.status === "delivered" && "✓✓ Delivered"}
-          {message.status === "read" && "✓✓ Read"}
-          {message.status === "failed" && "✗ Failed"}
-        </span>
-      </div>
     </motion.div>
   );
 };
