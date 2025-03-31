@@ -6,6 +6,10 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
+app.get("/", (_, res) => {
+  res.status(200).send("OK");
+});
+
 const rooms = new Map<string, { password: string; sockets: string[] }>();
 
 io.on("connection", (socket) => {
