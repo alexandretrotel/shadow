@@ -5,7 +5,17 @@ import type { Room } from "./types";
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, { cors: { origin: "http://localhost:5173" } });
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://shadow-backend.alexandretrotel.org",
+    ],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  },
+});
 
 app.get("/", (_, res) => {
   res.send("Server is running");

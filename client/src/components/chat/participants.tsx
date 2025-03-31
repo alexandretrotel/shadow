@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle } from "@/components/ui/card";
+import { useChatStore } from "@/store/chat-store";
 import { Participant } from "@/types/chat";
 import { motion } from "motion/react";
 
@@ -21,6 +22,16 @@ export const Participants = ({
       <CardTitle className="text-secondary-foreground text-lg tracking-wide">
         Room: {roomName}
       </CardTitle>
+      <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
+        <Button
+          onClick={() => useChatStore.getState().clearMessages()}
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-accent-foreground"
+        >
+          Clear Chat
+        </Button>
+      </motion.div>
       <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
         <Button
           onClick={onLeave}

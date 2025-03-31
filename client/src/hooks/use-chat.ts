@@ -1,38 +1,43 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import nacl from "tweetnacl";
 import {
   encode as encodeBase64,
   decode as decodeBase64,
 } from "@stablelib/base64";
 import { socketService } from "@/lib/socket-service";
-import { ChatState, ChatActions, Message } from "@/types/chat";
+import { ChatActions, Message } from "@/types/chat";
 import { debounce } from "lodash";
+import { useChatStore } from "@/store/chat-store";
 
-export function useChat(): ChatState & ChatActions {
-  const [state, setState] = useState<ChatState>({
-    roomName: "",
-    username: "",
-    messages: [],
-    participants: [],
-    typingUsers: [],
-  });
+export function useChat(): ChatActions {
+  const {
+    roomName,
+    username,
+    participants,
+    addMessage,
+    setParticipants,
+    addTypingUser,
+    removeTypingUser,
+    setRoomName,
+    setUsername,
+    reset,
+  } = useChatStore();
 
   useEffect(() => {
     socketService.onPublicKeys(({ username, publicKey }) => {
       const pubKey = decodeBase64(publicKey);
-      setState((prev) => ({
-        ...prev,
-        participants: prev.participants.some((p) => p.username === username)
-          ? prev.participants
-          : [...prev.participants, { username, publicKey: pubKey }],
-      }));
+      setParticipants(
+        participants.some((p) => p.username === username)
+          ? participants
+          : [...participants, { username, publicKey: pubKey }],
+      );
     });
 
     socketService.onMessage((msg) => {
       const encrypted = decodeBase64(msg.content);
       const nonce = encrypted.slice(0, nacl.box.nonceLength);
       const ciphertext = encrypted.slice(nacl.box.nonceLength);
-      const senderPubKey = state.participants.find(
+      const senderPubKey = participants.find(
         (p) => p.username === msg.sender,
       )?.publicKey;
       const keyPair = socketService.getKeyPair();
@@ -52,12 +57,12 @@ export function useChat(): ChatState & ChatActions {
           content,
           status: decrypted ? "delivered" : "failed",
         } as Message;
-        setState((prev) => ({ ...prev, messages: [...prev.messages, newMsg] }));
+        addMessage(newMsg);
         if (newMsg.timer) {
           setTimeout(() => {
-            setState((prev) => ({
-              ...prev,
-              messages: prev.messages.filter(
+            useChatStore.setState((state) => ({
+              ...state,
+              messages: state.messages.filter(
                 (m) => m.messageId !== newMsg.messageId,
               ),
             }));
@@ -69,22 +74,20 @@ export function useChat(): ChatState & ChatActions {
     socketService.onError((msg) => alert(msg));
 
     socketService.onTyping((username) => {
-      setState((prev) => ({
-        ...prev,
-        typingUsers: [...new Set([...prev.typingUsers, username])],
-      }));
-      setTimeout(() => {
-        setState((prev) => ({
-          ...prev,
-          typingUsers: prev.typingUsers.filter((u) => u !== username),
-        }));
-      }, 2000);
+      addTypingUser(username);
+      setTimeout(() => removeTypingUser(username), 2000);
     });
 
     return () => {
       socketService.disconnect();
     };
-  }, [state.participants]);
+  }, [
+    participants,
+    addMessage,
+    addTypingUser,
+    removeTypingUser,
+    setParticipants,
+  ]);
 
   const joinRoom = (roomName: string, password: string, username: string) => {
     const keys = nacl.box.keyPair();
@@ -95,30 +98,31 @@ export function useChat(): ChatState & ChatActions {
       username,
       encodeBase64(keys.publicKey),
     );
-    setState((prev) => ({ ...prev, roomName, username }));
+    setRoomName(roomName);
+    setUsername(username);
   };
 
   const sendMessage = (content: string, timer?: number) => {
     const messageId = socketService.sendMessage(
-      state.roomName,
+      roomName,
       content,
-      state.participants,
+      participants,
       timer,
     );
     if (messageId) {
       const msg = {
-        sender: state.username,
+        sender: username,
         content,
         timer,
         status: "sent",
         messageId,
       } as Message;
-      setState((prev) => ({ ...prev, messages: [...prev.messages, msg] }));
+      addMessage(msg);
       if (timer) {
         setTimeout(() => {
-          setState((prev) => ({
-            ...prev,
-            messages: prev.messages.filter((m) => m.messageId !== messageId),
+          useChatStore.setState((state) => ({
+            ...state,
+            messages: state.messages.filter((m) => m.messageId !== messageId),
           }));
         }, timer * 1000);
       }
@@ -126,19 +130,13 @@ export function useChat(): ChatState & ChatActions {
   };
 
   const leaveRoom = () => {
-    socketService.leaveRoom(state.roomName);
-    setState({
-      roomName: "",
-      username: "",
-      messages: [],
-      participants: [],
-      typingUsers: [],
-    });
+    socketService.leaveRoom(roomName);
+    reset();
     socketService.setKeyPair(null);
   };
 
   const sendTyping = debounce(() => {
-    socketService.sendTyping(state.roomName, state.username);
+    socketService.sendTyping(roomName, username);
   }, 500);
 
   const getKeyFingerprint = (key: Uint8Array) => {
@@ -147,7 +145,6 @@ export function useChat(): ChatState & ChatActions {
   };
 
   return {
-    ...state,
     joinRoom,
     sendMessage,
     leaveRoom,
@@ -155,3 +152,13 @@ export function useChat(): ChatState & ChatActions {
     getKeyFingerprint,
   };
 }
+
+export const useChatState = () => {
+  return useChatStore((state) => ({
+    roomName: state.roomName,
+    username: state.username,
+    messages: state.messages,
+    participants: state.participants,
+    typingUsers: state.typingUsers,
+  }));
+};

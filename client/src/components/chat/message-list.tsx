@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { CardContent } from "@/components/ui/card";
 import { MessageItem } from "./message-item";
 import { Message } from "@/types/chat";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface MessageListProps {
   messages: Message[];
@@ -24,24 +24,29 @@ export const MessageList = ({
   return (
     <CardContent className="flex flex-grow flex-col p-0">
       <div className="bg-muted flex-grow overflow-y-auto p-4">
-        {messages.map((msg) => (
-          <motion.div
-            key={msg.messageId}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          >
-            <MessageItem
+        <AnimatePresence>
+          {messages.map((msg) => (
+            <motion.div
               key={msg.messageId}
-              message={msg}
-              username={username}
-            />
-          </motion.div>
-        ))}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <MessageItem message={msg} username={username} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
         {typingUsers.length > 0 && (
-          <div className="text-muted-foreground text-xs italic">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-muted-foreground text-xs italic"
+          >
             {typingUsers.join(", ")} typing...
-          </div>
+          </motion.div>
         )}
         <div ref={messagesEndRef} />
       </div>

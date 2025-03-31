@@ -2,6 +2,7 @@ import { io, Socket } from "socket.io-client";
 import nacl from "tweetnacl";
 import { encode as encodeBase64 } from "@stablelib/base64";
 import { Message, Participant } from "@/types/chat";
+import { SERVER_URL } from "./server";
 
 export class SocketService {
   private socket: Socket;
@@ -111,4 +112,4 @@ export class SocketService {
   }
 }
 
-export const socketService = new SocketService("http://localhost:3000");
+export const socketService = new SocketService(SERVER_URL);
