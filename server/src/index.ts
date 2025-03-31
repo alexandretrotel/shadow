@@ -70,9 +70,8 @@ io.on("connection", (socket) => {
     socket.to(roomName).emit("typing", { username });
   });
 
-  socket.on("messageRead", ({ roomName, messageId }) => {
-    console.log(`Message ${messageId} read in ${roomName} by ${socket.id}`);
-    io.to(roomName).emit("messageStatus", { messageId, status: "read" });
+  socket.on("messageRead", ({ messageId }) => {
+    console.log(`Message ${messageId} read by ${socket.id}`);
   });
 
   socket.on("editMessage", ({ roomName, messageId, encryptedContent }) => {

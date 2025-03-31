@@ -7,14 +7,6 @@ import {
 import { Message, Participant } from "@/types/chat";
 import { SERVER_URL } from "./server";
 
-interface SocketData {
-  roomName?: string;
-}
-
-interface ExtendedSocket extends Socket {
-  data?: SocketData;
-}
-
 export class SocketService {
   private socket: Socket;
   private keyPair: nacl.BoxKeyPair | null = null;
@@ -131,8 +123,7 @@ export class SocketService {
           status: "sent",
         });
 
-        (this.socket as ExtendedSocket).emit("messageRead", {
-          roomName: (this.socket as ExtendedSocket).data?.roomName,
+        this.socket.emit("messageRead", {
           messageId,
         });
       },

@@ -52,7 +52,11 @@ export const Participants = ({
             transition={{ duration: 0.3 }}
             className="bg-muted rounded px-2 py-1"
           >
-            {p.username} ({getKeyFingerprint(p.publicKey)})
+            {p.username} (
+            {p.publicKey instanceof Uint8Array
+              ? getKeyFingerprint(p.publicKey)
+              : "Invalid Key"}
+            )
           </motion.span>
         ))}
       </div>
