@@ -6,7 +6,7 @@ import {
   encode as encodeBase64,
   decode as decodeBase64,
 } from "@stablelib/base64";
-import { PaperclipIcon, XIcon } from "lucide-react";
+import { PaperclipIcon, XIcon, DownloadIcon } from "lucide-react";
 
 interface Message {
   sender: string;
@@ -32,6 +32,8 @@ interface ChatRoomProps {
   typingUsers: string[];
   sendTyping: () => void;
 }
+
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
 export const ChatRoom = memo(function ChatRoom({
   roomName,
@@ -70,23 +72,51 @@ export const ChatRoom = memo(function ChatRoom({
     }
   };
 
+  const isImageFile = (fileName: string) => {
+    const extension = fileName.split(".").pop()?.toLowerCase();
+    return extension && IMAGE_EXTENSIONS.includes(extension);
+  };
+
   const renderMessage = (msg: Message) => {
     if (msg.content.startsWith("[FILE:")) {
       const [prefix, content] = msg.content.split("]");
       const fileName = prefix.slice(6);
       const fileData = decodeBase64(content);
+      const base64Data = encodeBase64(fileData);
+      const dataUrl = `data:application/octet-stream;base64,${base64Data}`;
+
+      if (isImageFile(fileName)) {
+        return (
+          <div className="flex flex-col gap-1">
+            <img
+              src={`data:image/${fileName
+                .split(".")
+                .pop()};base64,${base64Data}`}
+              alt={fileName}
+              className="max-w-[300px] rounded-md"
+            />
+            <a
+              href={dataUrl}
+              download={fileName}
+              className="text-xs text-muted-foreground hover:text-accent flex items-center gap-1"
+            >
+              <DownloadIcon className="size-3" /> Download {fileName}
+            </a>
+          </div>
+        );
+      }
+
       return (
         <a
-          href={`data:application/octet-stream;base64,${encodeBase64(
-            fileData
-          )}`}
+          href={dataUrl}
           download={fileName}
-          className="text-accent-foreground underline hover:text-accent"
+          className="text-accent-foreground underline hover:text-accent flex items-center gap-1"
         >
           📎 {fileName}
         </a>
       );
     }
+
     return <span className="text-foreground">{msg.content}</span>;
   };
 
