@@ -260,8 +260,6 @@ export function useChat(): ChatActions {
       socketService.getSocket().off("messageEdited", handleMessageEdited);
       socketService.getSocket().off("messageDeleted", handleMessageDeleted);
       socketService.getSocket().off("messageReaction", handleMessageReaction);
-
-      socketService.disconnect();
     };
   }, [addMessage, addTypingUser, removeTypingUser, roomName, username]);
 
