@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { encode as encodeBase64 } from "@stablelib/base64";
-import { PaperclipIcon, XIcon } from "lucide-react";
+import { PaperclipIcon, XIcon, MicIcon } from "lucide-react";
 import { motion } from "motion/react";
 
 interface InputAreaProps {
@@ -13,7 +13,39 @@ interface InputAreaProps {
 export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
   const [input, setInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorderRef.current = new MediaRecorder(stream);
+    audioChunksRef.current = [];
+
+    mediaRecorderRef.current.ondataavailable = (event) => {
+      audioChunksRef.current.push(event.data);
+    };
+
+    mediaRecorderRef.current.onstop = async () => {
+      const audioBlob = new Blob(audioChunksRef.current, {
+        type: "audio/webm",
+      });
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const content = `[VOICE:${Date.now()}.webm]${encodeBase64(new Uint8Array(arrayBuffer))}`;
+      onSend(content);
+      stream.getTracks().forEach((track) => track.stop());
+    };
+
+    mediaRecorderRef.current.start();
+    setIsRecording(true);
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+  };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +90,17 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
         </motion.div>
       )}
       <div className="flex items-center gap-2">
+        <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={isRecording ? stopRecording : startRecording}
+            className={`text-muted-foreground hover:text-accent-foreground ${isRecording ? "animate-pulse" : ""}`}
+          >
+            <MicIcon className="size-5" />
+          </Button>
+        </motion.div>
         <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
           <Button
             type="button"

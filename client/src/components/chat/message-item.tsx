@@ -63,6 +63,7 @@ export const MessageItem = ({
           </div>
         );
       }
+
       return (
         <a
           href={dataUrl}
@@ -73,6 +74,28 @@ export const MessageItem = ({
         </a>
       );
     }
+
+    if (message.content.startsWith("[VOICE:")) {
+      const [prefix, content] = message.content.split("]");
+      const fileName = prefix.slice(7);
+      const fileData = decodeBase64(content);
+      const base64Data = encodeBase64(fileData);
+      const audioUrl = `data:audio/webm;base64,${base64Data}`;
+
+      return (
+        <div className="flex items-center gap-2">
+          <audio controls src={audioUrl} className="max-w-[300px]" />
+          <a
+            href={audioUrl}
+            download={fileName}
+            className="text-muted-foreground hover:text-accent flex items-center gap-1 text-xs"
+          >
+            <DownloadIcon className="size-3" /> Download
+          </a>
+        </div>
+      );
+    }
+
     return <span className="text-foreground">{message.content}</span>;
   };
 
