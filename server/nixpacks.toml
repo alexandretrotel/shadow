@@ -1,0 +1,16 @@
+buildImage = "ghcr.io/railwayapp/nixpacks:ubuntu-1737417843"
+
+[variables]
+NODE_ENV = "production"
+
+[phases.setup]
+nixPkgs = ["bun"]
+aptPkgs = ["curl", "wget"]
+
+[phases.install]
+dependsOn = ["setup"]
+cmds = ["bun install"]
+cacheDirectories = ["/root/.bun"]
+
+[start]
+cmd = "bun run index.ts"
