@@ -29,13 +29,29 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("message", ({ roomName, encryptedContent, timer }) => {
+  socket.on("message", ({ roomName, encryptedContent, timer, messageId }) => {
     // Send the encrypted message to all sockets in the room
     io.to(roomName).emit("message", {
       sender: socket.id,
       encryptedContent,
       timer,
+      messageId,
     });
+  });
+
+  socket.on("typing", ({ roomName, username }) => {
+    // Notify all sockets in the room that someone is typing
+    io.to(roomName).emit("typing", { username });
+  });
+
+  socket.on("leaveRoom", ({ roomName }) => {
+    // Remove the socket from the room
+    socket.leave(roomName);
+    const room = rooms.get(roomName);
+    if (room) {
+      room.sockets = room.sockets.filter((id) => id !== socket.id);
+      if (room.sockets.length === 0) rooms.delete(roomName);
+    }
   });
 
   socket.on("disconnect", () => {

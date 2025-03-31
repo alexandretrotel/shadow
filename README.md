@@ -1,15 +1,32 @@
-# shadow
+# Shadow - E2EE Chat App
 
-To install dependencies:
+A secure, end-to-end encrypted chat application built with Bun, Vite, Express, Socket.IO, and shadcn/ui.
 
-```bash
-bun install
-```
+## Features
 
-To run:
+- E2EE with TweetNaCl
+- Room-based chat with password protection
+- Self-destructing messages
+- Message status (sent/delivered/failed)
+- File sharing
+- Typing indicators
+- Key fingerprint verification
+- Auto-scrolling chat
 
-```bash
-bun run index.ts
-```
+## Setup
 
-This project was created using `bun init` in bun v1.2.4. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+1. Install dependencies:
+   ```bash
+   bun install
+   ```
+2. Run development servers:
+   ```bash
+   bun run dev
+   ```
+
+## Deployment
+
+- Build the client: `bun run build`
+- Start the server: `bun run server`
+
+Built with [Bun](https://bun.sh) v1.2.4.

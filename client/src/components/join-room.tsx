@@ -21,12 +21,12 @@ export function JoinRoom({ onJoin }: JoinRoomProps) {
 
   return (
     <Card className="w-full max-w-md mx-auto mt-10 shadow-lg border-none">
-      <CardHeader className="border-b border-border pb-4">
+      <CardHeader>
         <CardTitle className="text-lg text-secondary-foreground tracking-wide">
           Enter the Shadows
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-6">
+      <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             placeholder="Room Name"
