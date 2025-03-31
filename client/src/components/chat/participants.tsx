@@ -20,7 +20,7 @@ export const Participants = ({
   <CardHeader className="border-muted flex-shrink-0 border-b pt-6">
     <div className="flex items-center justify-between">
       <CardTitle className="text-secondary-foreground text-lg tracking-wide">
-        Room: {roomName}
+        #{roomName}
       </CardTitle>
       <motion.div transition={{ duration: 0.2 }} className="flex gap-2">
         <Button

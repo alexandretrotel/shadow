@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { InputArea } from "./input-area";
 import { MessageList } from "./message-list";
 import { Participants } from "./participants";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export const ChatContainer = ({
@@ -26,8 +25,6 @@ export const ChatContainer = ({
   deleteMessage: (messageId: string) => void;
   reactToMessage: (messageId: string, reaction: string) => void;
 }) => {
-  const isMobile = useIsMobile();
-
   const scrollToMessage = (messageId: string) => {
     const element = document.getElementById(`msg-${messageId}`);
     element?.scrollIntoView({ behavior: "smooth" });
@@ -38,17 +35,12 @@ export const ChatContainer = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className={cn(
-        "flex flex-col",
-        isMobile
-          ? "h-screen w-screen p-0"
-          : "mx-auto h-[85vh] w-full max-w-3xl",
-      )}
+      className="flex h-screen w-screen flex-col p-0"
     >
       <Card
         className={cn(
           "flex h-full flex-col gap-0 border-none py-0 shadow-lg",
-          isMobile && "rounded-none",
+          "bg-background",
         )}
       >
         <Participants

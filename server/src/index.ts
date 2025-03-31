@@ -81,6 +81,7 @@ io.on("connection", (socket) => {
       sender: socket.id,
       reaction,
     });
+    // Note: Server doesn’t store reactions, so client-side check is sufficient for now
   });
 
   socket.on("leaveRoom", ({ roomName }) => {

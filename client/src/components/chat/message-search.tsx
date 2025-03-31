@@ -3,6 +3,7 @@ import Fuse from "fuse.js";
 import { Input } from "@/components/ui/input";
 import { Message } from "@/types/chat";
 import { motion, AnimatePresence } from "motion/react";
+import { featureFlags } from "@/lib/features";
 
 interface MessageSearchProps {
   messages: Message[];
@@ -25,6 +26,10 @@ export const MessageSearch = ({ messages, onSelect }: MessageSearchProps) => {
     () => (query ? fuse.search(query).map((result) => result.item) : []),
     [fuse, query],
   );
+
+  if (featureFlags.enableMessageSearch === false) {
+    return null;
+  }
 
   return (
     <AnimatePresence>

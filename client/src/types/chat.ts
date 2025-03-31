@@ -7,6 +7,7 @@ export interface Message {
   status: "sent" | "delivered" | "read" | "failed";
   messageId: string;
   reactions?: { sender: string; reaction: string }[];
+  type?: "text" | "file" | "voice";
 }
 
 export interface Participant {

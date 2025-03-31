@@ -48,6 +48,18 @@ export function useChat(): ChatActions {
   };
 
   const reactToMessage = (messageId: string, reaction: string) => {
+    const currentMessage = useChatStore
+      .getState()
+      .messages.find((msg) => msg.messageId === messageId);
+    const userReaction = currentMessage?.reactions?.find(
+      (r) => r.sender === username && r.reaction === reaction,
+    );
+
+    if (userReaction) {
+      toast.info("You’ve already reacted with this emoji.");
+      return;
+    }
+
     socketService.reactToMessage(roomName, messageId, reaction);
     useChatStore.setState((state) => ({
       ...state,
@@ -121,6 +133,11 @@ export function useChat(): ChatActions {
           ...msg,
           content,
           status: decrypted ? "delivered" : "failed",
+          type: msg.content.startsWith("[FILE:")
+            ? "file"
+            : msg.content.startsWith("[VOICE:")
+              ? "voice"
+              : "text",
         } as Message;
         addMessage(newMsg);
         if (newMsg.timer) {
@@ -281,6 +298,11 @@ export function useChat(): ChatActions {
         timer,
         status: "sent",
         messageId,
+        type: content.startsWith("[FILE:")
+          ? "file"
+          : content.startsWith("[VOICE:")
+            ? "voice"
+            : "text",
       } as Message;
       addMessage(msg);
       if (timer) {

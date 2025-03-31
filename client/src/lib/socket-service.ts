@@ -190,7 +190,9 @@ export class SocketService {
       reaction: string;
     }) => void,
   ) {
-    this.socket.on("messageReaction", callback);
+    this.socket.on("messageReaction", (data) => {
+      callback(data);
+    });
   }
 
   deleteMessage(roomName: string, messageId: string) {
