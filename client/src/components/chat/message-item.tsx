@@ -4,15 +4,34 @@ import {
 } from "@stablelib/base64";
 import { DownloadIcon } from "lucide-react";
 import { Message } from "@/types/chat";
+import { useState } from "react";
+import { EditIcon, TrashIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
 interface MessageItemProps {
   message: Message;
   username: string;
+  onEdit: (messageId: string, content: string) => void;
+  onDelete: (messageId: string) => void;
 }
 
-export const MessageItem = ({ message, username }: MessageItemProps) => {
+export const MessageItem = ({
+  message,
+  username,
+  onEdit,
+  onDelete,
+}: MessageItemProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(message.content);
+
+  const handleEdit = () => {
+    onEdit(message.messageId, editContent);
+    setIsEditing(false);
+  };
+
   const isImageFile = (fileName: string) =>
     IMAGE_EXTENSIONS.includes(fileName.split(".").pop()?.toLowerCase() || "");
 
@@ -59,21 +78,55 @@ export const MessageItem = ({ message, username }: MessageItemProps) => {
 
   return (
     <div
-      className={`mb-3 flex flex-col text-sm ${
-        message.sender === username ? "items-end" : "items-start"
-      }`}
+      className={`mb-3 flex flex-col text-sm ${message.sender === username ? "items-end" : "items-start"}`}
     >
       <div
-        className={`max-w-[70%] rounded-lg p-2 ${
-          message.sender === username
-            ? "bg-secondary text-secondary-foreground"
-            : "bg-card text-foreground"
-        }`}
+        className={`max-w-[70%] rounded-lg p-2 ${message.sender === username ? "bg-secondary text-secondary-foreground" : "bg-card text-foreground"}`}
       >
         <span className="text-muted-foreground font-mono text-xs">
           {message.sender === username ? "You" : message.sender}:
         </span>{" "}
-        {renderContent()}
+        {isEditing && message.sender === username ? (
+          <div className="flex items-center gap-2">
+            <Input
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="bg-muted text-foreground border-none"
+            />
+            <Button variant="ghost" size="sm" onClick={handleEdit}>
+              Save
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditing(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <>
+            {renderContent()}
+            {message.sender === username && (
+              <div className="mt-1 flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <EditIcon className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(message.messageId)}
+                >
+                  <TrashIcon className="size-4" />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
         {message.timer && (
           <span className="text-muted-foreground ml-2 text-xs">
             ({message.timer}s)
@@ -81,7 +134,10 @@ export const MessageItem = ({ message, username }: MessageItemProps) => {
         )}
       </div>
       <span className="text-muted-foreground mt-1 text-xs">
-        {message.status}
+        {message.status === "sent" && "✓ Sent"}
+        {message.status === "delivered" && "✓✓ Delivered"}
+        {message.status === "read" && "✓✓ Read"}
+        {message.status === "failed" && "✗ Failed"}
       </span>
     </div>
   );

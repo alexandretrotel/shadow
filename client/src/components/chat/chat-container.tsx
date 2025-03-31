@@ -15,6 +15,8 @@ export const ChatContainer = ({
   getKeyFingerprint,
   typingUsers,
   sendTyping,
+  editMessage,
+  deleteMessage,
 }: ChatRoomProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -33,6 +35,8 @@ export const ChatContainer = ({
         messages={messages}
         username={username}
         typingUsers={typingUsers}
+        onEdit={editMessage}
+        onDelete={deleteMessage}
       />
       <InputArea onSend={onSend} sendTyping={sendTyping} />
     </Card>

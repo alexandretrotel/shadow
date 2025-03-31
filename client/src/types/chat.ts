@@ -1,8 +1,10 @@
+import { RoomFormData } from "@/lib/schemas";
+
 export interface Message {
   sender: string;
   content: string;
   timer?: number;
-  status?: "sent" | "delivered" | "failed";
+  status: "sent" | "delivered" | "read" | "failed";
   messageId: string;
 }
 
@@ -20,11 +22,13 @@ export interface ChatState {
 }
 
 export interface ChatActions {
-  joinRoom: (roomName: string, password: string, username: string) => void;
+  joinRoom: (data: RoomFormData) => void;
   sendMessage: (content: string, timer?: number) => void;
   leaveRoom: () => void;
   sendTyping: () => void;
   getKeyFingerprint: (key: Uint8Array) => string;
+  editMessage: (messageId: string, content: string) => void;
+  deleteMessage: (messageId: string) => void;
 }
 
 export interface ChatRoomProps {
@@ -37,4 +41,6 @@ export interface ChatRoomProps {
   getKeyFingerprint: (key: Uint8Array) => string;
   typingUsers: string[];
   sendTyping: () => void;
+  editMessage: (messageId: string, content: string) => void;
+  deleteMessage: (messageId: string) => void;
 }

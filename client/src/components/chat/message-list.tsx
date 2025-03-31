@@ -8,12 +8,16 @@ interface MessageListProps {
   messages: Message[];
   username: string;
   typingUsers: string[];
+  onEdit: (messageId: string, content: string) => void;
+  onDelete: (messageId: string) => void;
 }
 
 export const MessageList = ({
   messages,
   username,
   typingUsers,
+  onEdit,
+  onDelete,
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +37,12 @@ export const MessageList = ({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
-              <MessageItem message={msg} username={username} />
+              <MessageItem
+                message={msg}
+                username={username}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             </motion.div>
           ))}
         </AnimatePresence>

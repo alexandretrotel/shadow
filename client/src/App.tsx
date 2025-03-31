@@ -7,15 +7,22 @@ import { motion } from "motion/react";
 function App() {
   const { roomName, username, messages, participants, typingUsers } =
     useChatState();
-  const { joinRoom, sendMessage, leaveRoom, getKeyFingerprint, sendTyping } =
-    useChat();
+  const {
+    joinRoom,
+    sendMessage,
+    leaveRoom,
+    getKeyFingerprint,
+    sendTyping,
+    editMessage,
+    deleteMessage,
+  } = useChat();
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="bg-background flex min-h-screen items-center justify-center p-4"
+      className="bg-background flex min-h-screen flex-col items-center justify-center gap-4 p-4"
     >
       {!roomName ? (
         <JoinRoom onJoin={joinRoom} />
@@ -30,6 +37,8 @@ function App() {
           getKeyFingerprint={getKeyFingerprint}
           typingUsers={typingUsers}
           sendTyping={sendTyping}
+          editMessage={editMessage}
+          deleteMessage={deleteMessage}
         />
       )}
     </motion.div>

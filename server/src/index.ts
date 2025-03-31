@@ -63,6 +63,18 @@ io.on("connection", (socket) => {
     socket.to(roomName).emit("typing", { username });
   });
 
+  socket.on("messageRead", ({ roomName, messageId }) => {
+    io.to(roomName).emit("messageStatus", { messageId, status: "read" });
+  });
+
+  socket.on("editMessage", ({ roomName, messageId, encryptedContent }) => {
+    io.to(roomName).emit("messageEdited", { messageId, encryptedContent });
+  });
+
+  socket.on("deleteMessage", ({ roomName, messageId }) => {
+    io.to(roomName).emit("messageDeleted", { messageId });
+  });
+
   socket.on("leaveRoom", ({ roomName }) => {
     socket.leave(roomName);
     const room = rooms.get(roomName);

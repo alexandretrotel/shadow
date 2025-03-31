@@ -10,6 +10,7 @@ import { debounce } from "lodash";
 import { useChatStore } from "@/store/chat-store";
 import { useShallow } from "zustand/react/shallow";
 import { toast } from "sonner";
+import { RoomFormData } from "@/lib/schemas";
 
 export function useChat(): ChatActions {
   const {
@@ -22,6 +23,29 @@ export function useChat(): ChatActions {
     setUsername,
     reset,
   } = useChatStore();
+
+  const editMessage = (messageId: string, content: string) => {
+    socketService.editMessage(
+      roomName,
+      messageId,
+      content,
+      useChatStore.getState().participants,
+    );
+    useChatStore.setState((state) => ({
+      ...state,
+      messages: state.messages.map((msg) =>
+        msg.messageId === messageId ? { ...msg, content, status: "sent" } : msg,
+      ),
+    }));
+  };
+
+  const deleteMessage = (messageId: string) => {
+    socketService.deleteMessage(roomName, messageId);
+    useChatStore.setState((state) => ({
+      ...state,
+      messages: state.messages.filter((msg) => msg.messageId !== messageId),
+    }));
+  };
 
   useEffect(() => {
     if (roomName && username && !socketService.getKeyPair()) {
@@ -104,21 +128,87 @@ export function useChat(): ChatActions {
       setTimeout(() => removeTypingUser(username), 2000);
     };
 
+    const handleMessageStatus = ({
+      messageId,
+      status,
+    }: {
+      messageId: string;
+      status: "read";
+    }) => {
+      useChatStore.setState((state) => ({
+        ...state,
+        messages: state.messages.map((msg) =>
+          msg.messageId === messageId ? { ...msg, status } : msg,
+        ),
+      }));
+    };
+
+    const handleMessageEdited = ({
+      messageId,
+      encryptedContent,
+    }: {
+      messageId: string;
+      encryptedContent: string;
+    }) => {
+      const encrypted = decodeBase64(encryptedContent);
+      const nonce = encrypted.slice(0, nacl.box.nonceLength);
+      const ciphertext = encrypted.slice(nacl.box.nonceLength);
+      const senderPubKey = useChatStore
+        .getState()
+        .participants.find((p) => p.username !== username)?.publicKey;
+      const keyPair = socketService.getKeyPair();
+      if (senderPubKey && keyPair) {
+        const decrypted = nacl.box.open(
+          ciphertext,
+          nonce,
+          senderPubKey,
+          keyPair.secretKey,
+        );
+        const content = decrypted
+          ? new TextDecoder().decode(decrypted)
+          : "Decryption failed";
+        useChatStore.setState((state) => ({
+          ...state,
+          messages: state.messages.map((msg) =>
+            msg.messageId === messageId
+              ? { ...msg, content, status: "delivered" }
+              : msg,
+          ),
+        }));
+      }
+    };
+
+    const handleMessageDeleted = ({ messageId }: { messageId: string }) => {
+      useChatStore.setState((state) => ({
+        ...state,
+        messages: state.messages.filter((msg) => msg.messageId !== messageId),
+      }));
+    };
+
     socketService.onPublicKeys(handlePublicKeys);
     socketService.onMessage(handleMessage);
     socketService.onError(handleError);
     socketService.onTyping(handleTyping);
+    socketService.onMessageStatus(handleMessageStatus);
+    socketService.onMessageEdited(handleMessageEdited);
+    socketService.onMessageDeleted(handleMessageDeleted);
 
     return () => {
       socketService.getSocket().off("publicKeys", handlePublicKeys);
       socketService.getSocket().off("message", handleMessage);
       socketService.getSocket().off("error", handleError);
       socketService.getSocket().off("typing", handleTyping);
+      socketService.getSocket().off("messageStatus", handleMessageStatus);
+      socketService.getSocket().off("messageEdited", handleMessageEdited);
+      socketService.getSocket().off("messageDeleted", handleMessageDeleted);
+
       socketService.disconnect();
     };
   }, [addMessage, addTypingUser, removeTypingUser, roomName, username]);
 
-  const joinRoom = (roomName: string, password: string, username: string) => {
+  const joinRoom = (data: RoomFormData) => {
+    const { roomName, password, username } = data;
+
     const keys = socketService.getKeyPair() || nacl.box.keyPair();
     socketService.setKeyPair(keys);
     socketService.joinRoom(
@@ -185,6 +275,8 @@ export function useChat(): ChatActions {
     leaveRoom,
     sendTyping,
     getKeyFingerprint,
+    editMessage,
+    deleteMessage,
   };
 }
 

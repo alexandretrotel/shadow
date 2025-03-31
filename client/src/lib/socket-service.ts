@@ -7,6 +7,14 @@ import {
 import { Message, Participant } from "@/types/chat";
 import { SERVER_URL } from "./server";
 
+interface SocketData {
+  roomName?: string;
+}
+
+interface ExtendedSocket extends Socket {
+  data?: SocketData;
+}
+
 export class SocketService {
   private socket: Socket;
   private keyPair: nacl.BoxKeyPair | null = null;
@@ -122,8 +130,19 @@ export class SocketService {
           messageId,
           status: "sent",
         });
+
+        (this.socket as ExtendedSocket).emit("messageRead", {
+          roomName: (this.socket as ExtendedSocket).data?.roomName,
+          messageId,
+        });
       },
     );
+  }
+
+  onMessageStatus(
+    callback: (data: { messageId: string; status: "read" }) => void,
+  ) {
+    this.socket.on("messageStatus", callback);
   }
 
   onError(callback: (msg: string) => void) {
@@ -132,6 +151,46 @@ export class SocketService {
 
   onTyping(callback: (username: string) => void) {
     this.socket.on("typing", ({ username }) => callback(username));
+  }
+
+  editMessage(
+    roomName: string,
+    messageId: string,
+    content: string,
+    participants: Participant[],
+  ) {
+    if (!this.keyPair) return;
+    participants.forEach((p) => {
+      const nonce = nacl.randomBytes(nacl.box.nonceLength);
+      const encrypted = nacl.box(
+        new TextEncoder().encode(content),
+        nonce,
+        p.publicKey,
+        this.keyPair!.secretKey,
+      );
+      const fullMessage = new Uint8Array(nonce.length + encrypted.length);
+      fullMessage.set(nonce);
+      fullMessage.set(encrypted, nonce.length);
+      this.socket.emit("editMessage", {
+        roomName,
+        messageId,
+        encryptedContent: encodeBase64(fullMessage),
+      });
+    });
+  }
+
+  deleteMessage(roomName: string, messageId: string) {
+    this.socket.emit("deleteMessage", { roomName, messageId });
+  }
+
+  onMessageEdited(
+    callback: (data: { messageId: string; encryptedContent: string }) => void,
+  ) {
+    this.socket.on("messageEdited", callback);
+  }
+
+  onMessageDeleted(callback: (data: { messageId: string }) => void) {
+    this.socket.on("messageDeleted", callback);
   }
 
   getKeyPair() {
