@@ -33,7 +33,7 @@ export function useChat(): ChatState & ChatActions {
       const nonce = encrypted.slice(0, nacl.box.nonceLength);
       const ciphertext = encrypted.slice(nacl.box.nonceLength);
       const senderPubKey = state.participants.find(
-        (p) => p.username === msg.sender
+        (p) => p.username === msg.sender,
       )?.publicKey;
       const keyPair = socketService.getKeyPair();
 
@@ -42,7 +42,7 @@ export function useChat(): ChatState & ChatActions {
           ciphertext,
           nonce,
           senderPubKey,
-          keyPair.secretKey
+          keyPair.secretKey,
         );
         const content = decrypted
           ? new TextDecoder().decode(decrypted)
@@ -58,7 +58,7 @@ export function useChat(): ChatState & ChatActions {
             setState((prev) => ({
               ...prev,
               messages: prev.messages.filter(
-                (m) => m.messageId !== newMsg.messageId
+                (m) => m.messageId !== newMsg.messageId,
               ),
             }));
           }, newMsg.timer * 1000);
@@ -93,7 +93,7 @@ export function useChat(): ChatState & ChatActions {
       roomName,
       password,
       username,
-      encodeBase64(keys.publicKey)
+      encodeBase64(keys.publicKey),
     );
     setState((prev) => ({ ...prev, roomName, username }));
   };
@@ -103,7 +103,7 @@ export function useChat(): ChatState & ChatActions {
       state.roomName,
       content,
       state.participants,
-      timer
+      timer,
     );
     if (messageId) {
       const msg = {

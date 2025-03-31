@@ -1,7 +1,12 @@
 {
   "name": "shadow",
   "module": "index.ts",
-  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
   "private": true,
   "scripts": {
     "client": "bun run --filter @shadow/client dev",
@@ -10,12 +15,7 @@
     "build": "bun run --filter @shadow/client build",
     "preview": "bun run --filter @shadow/client preview"
   },
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
+  "type": "module",
   "workspaces": [
     "client",
     "server"

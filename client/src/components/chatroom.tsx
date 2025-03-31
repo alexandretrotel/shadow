@@ -62,7 +62,7 @@ export const ChatRoom = memo(function ChatRoom({
     if (file) {
       const arrayBuffer = await file.arrayBuffer();
       const content = `[FILE:${file.name}]${encodeBase64(
-        new Uint8Array(arrayBuffer)
+        new Uint8Array(arrayBuffer),
       )}`;
       onSend(content);
       setFile(null);

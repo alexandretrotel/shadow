@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Participant } from "@/types/chat";
+import { motion } from "motion/react";
 
 interface ParticipantsProps {
   roomName: string;
@@ -20,21 +21,29 @@ export const Participants = ({
       <CardTitle className="text-lg text-secondary-foreground tracking-wide">
         Room: {roomName}
       </CardTitle>
-      <Button
-        onClick={onLeave}
-        variant="ghost"
-        size="sm"
-        className="text-muted-foreground hover:text-accent-foreground"
-      >
-        Leave
-      </Button>
+      <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
+        <Button
+          onClick={onLeave}
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-accent-foreground"
+        >
+          Leave
+        </Button>
+      </motion.div>
     </div>
     {participants.length > 0 && (
       <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-2">
         {participants.map((p) => (
-          <span key={p.username} className="bg-muted px-2 py-1 rounded">
+          <motion.span
+            key={p.username}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="bg-muted px-2 py-1 rounded"
+          >
             {p.username} ({getKeyFingerprint(p.publicKey)})
-          </span>
+          </motion.span>
         ))}
       </div>
     )}

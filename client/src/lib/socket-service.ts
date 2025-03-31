@@ -24,7 +24,7 @@ export class SocketService {
     roomName: string,
     password: string,
     username: string,
-    publicKey: string
+    publicKey: string,
   ) {
     this.socket.emit("joinRoom", { roomName, password, username, publicKey });
   }
@@ -33,7 +33,7 @@ export class SocketService {
     roomName: string,
     content: string,
     participants: Participant[],
-    timer?: number
+    timer?: number,
   ) {
     if (!this.keyPair) return;
     const messageId = `${Date.now()}${Math.random().toString(36).slice(2)}`;
@@ -43,7 +43,7 @@ export class SocketService {
         new TextEncoder().encode(content),
         nonce,
         p.publicKey,
-        this.keyPair!.secretKey
+        this.keyPair!.secretKey,
       );
       const fullMessage = new Uint8Array(nonce.length + encrypted.length);
       fullMessage.set(nonce);
@@ -67,7 +67,7 @@ export class SocketService {
   }
 
   onPublicKeys(
-    callback: (data: { username: string; publicKey: string }) => void
+    callback: (data: { username: string; publicKey: string }) => void,
   ) {
     this.socket.on("publicKeys", callback);
   }
@@ -86,7 +86,7 @@ export class SocketService {
           messageId,
           status: "sent",
         });
-      }
+      },
     );
   }
 

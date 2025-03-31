@@ -5,7 +5,8 @@
 
 /* Base dark theme */
 :root {
-  font-family: system-ui, "Courier New", monospace; /* Monospace for a secretive, terminal-like feel */
+  font-family:
+    system-ui, "Courier New", monospace; /* Monospace for a secretive, terminal-like feel */
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;

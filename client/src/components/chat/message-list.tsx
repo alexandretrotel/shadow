@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { CardContent } from "@/components/ui/card";
 import { MessageItem } from "./message-item";
 import { Message } from "@/types/chat";
+import { motion } from "motion/react";
 
 interface MessageListProps {
   messages: Message[];
@@ -24,7 +25,18 @@ export const MessageList = ({
     <CardContent className="flex-grow flex flex-col p-0">
       <div className="flex-grow overflow-y-auto p-4 bg-muted">
         {messages.map((msg) => (
-          <MessageItem key={msg.messageId} message={msg} username={username} />
+          <motion.div
+            key={msg.messageId}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            <MessageItem
+              key={msg.messageId}
+              message={msg}
+              username={username}
+            />
+          </motion.div>
         ))}
         {typingUsers.length > 0 && (
           <div className="text-xs text-muted-foreground italic">
