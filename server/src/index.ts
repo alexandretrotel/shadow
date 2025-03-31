@@ -7,11 +7,17 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "https://shadow-backend.alexandretrotel.org",
-    ],
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        origin.startsWith("http://localhost") ||
+        origin === "https://shadow.alexandretrotel.org"
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
   },

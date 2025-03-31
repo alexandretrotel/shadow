@@ -14,7 +14,8 @@
     "dev": "bun run --filter @shadow/client dev & bun run --filter @shadow/server start",
     "build": "bun run --filter @shadow/client build",
     "preview": "bun run --filter @shadow/client preview",
-    "lint": "bun run --filter @shadow/client lint"
+    "lint": "bun run --filter @shadow/client lint",
+    "format": "bun run --filter @shadow/client format"
   },
   "type": "module",
   "workspaces": [
