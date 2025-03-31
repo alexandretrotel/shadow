@@ -22,7 +22,7 @@ export const Participants = ({
       <CardTitle className="text-secondary-foreground text-lg tracking-wide">
         Room: {roomName}
       </CardTitle>
-      <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
+      <motion.div transition={{ duration: 0.2 }} className="flex gap-2">
         <Button
           onClick={() => useChatStore.getState().clearMessages()}
           variant="ghost"
@@ -31,8 +31,7 @@ export const Participants = ({
         >
           Clear Chat
         </Button>
-      </motion.div>
-      <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
+
         <Button
           onClick={onLeave}
           variant="ghost"

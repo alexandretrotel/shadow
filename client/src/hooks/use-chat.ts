@@ -8,14 +8,13 @@ import { socketService } from "@/lib/socket-service";
 import { ChatActions, Message } from "@/types/chat";
 import { debounce } from "lodash";
 import { useChatStore } from "@/store/chat-store";
+import { useShallow } from "zustand/react/shallow";
 
 export function useChat(): ChatActions {
   const {
     roomName,
     username,
-    participants,
     addMessage,
-    setParticipants,
     addTypingUser,
     removeTypingUser,
     setRoomName,
@@ -24,9 +23,14 @@ export function useChat(): ChatActions {
   } = useChatStore();
 
   useEffect(() => {
-    socketService.onPublicKeys(({ username, publicKey }) => {
+    const handlePublicKeys = ({
+      username,
+      publicKey,
+    }: {
+      username: string;
+      publicKey: string;
+    }) => {
       const pubKey = decodeBase64(publicKey);
-
       useChatStore.setState((state) => {
         const alreadyExists = state.participants.some(
           (p) => p.username === username,
@@ -38,15 +42,15 @@ export function useChat(): ChatActions {
             : [...state.participants, { username, publicKey: pubKey }],
         };
       });
-    });
+    };
 
-    socketService.onMessage((msg) => {
+    const handleMessage = (msg: Message) => {
       const encrypted = decodeBase64(msg.content);
       const nonce = encrypted.slice(0, nacl.box.nonceLength);
       const ciphertext = encrypted.slice(nacl.box.nonceLength);
-      const senderPubKey = participants.find(
-        (p) => p.username === msg.sender,
-      )?.publicKey;
+      const senderPubKey = useChatStore
+        .getState()
+        .participants.find((p) => p.username === msg.sender)?.publicKey;
       const keyPair = socketService.getKeyPair();
 
       if (senderPubKey && keyPair) {
@@ -76,25 +80,28 @@ export function useChat(): ChatActions {
           }, newMsg.timer * 1000);
         }
       }
-    });
+    };
 
-    socketService.onError((msg) => alert(msg));
+    const handleError = (msg: string) => alert(msg);
 
-    socketService.onTyping((username) => {
+    const handleTyping = (username: string) => {
       addTypingUser(username);
       setTimeout(() => removeTypingUser(username), 2000);
-    });
+    };
+
+    socketService.onPublicKeys(handlePublicKeys);
+    socketService.onMessage(handleMessage);
+    socketService.onError(handleError);
+    socketService.onTyping(handleTyping);
 
     return () => {
+      socketService.getSocket().off("publicKeys", handlePublicKeys);
+      socketService.getSocket().off("message", handleMessage);
+      socketService.getSocket().off("error", handleError);
+      socketService.getSocket().off("typing", handleTyping);
       socketService.disconnect();
     };
-  }, [
-    participants,
-    addMessage,
-    addTypingUser,
-    removeTypingUser,
-    setParticipants,
-  ]);
+  }, [addMessage, addTypingUser, removeTypingUser]);
 
   const joinRoom = (roomName: string, password: string, username: string) => {
     const keys = nacl.box.keyPair();
@@ -113,7 +120,7 @@ export function useChat(): ChatActions {
     const messageId = socketService.sendMessage(
       roomName,
       content,
-      participants,
+      useChatStore.getState().participants,
       timer,
     );
     if (messageId) {
@@ -161,10 +168,12 @@ export function useChat(): ChatActions {
 }
 
 export const useChatState = () =>
-  useChatStore((state) => ({
-    roomName: state.roomName,
-    username: state.username,
-    messages: state.messages,
-    participants: state.participants,
-    typingUsers: state.typingUsers,
-  }));
+  useChatStore(
+    useShallow((state) => ({
+      roomName: state.roomName,
+      username: state.username,
+      messages: state.messages,
+      participants: state.participants,
+      typingUsers: state.typingUsers,
+    })),
+  );

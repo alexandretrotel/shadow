@@ -13,6 +13,10 @@ export class SocketService {
     this.socket = io(url);
   }
 
+  getSocket() {
+    return this.socket;
+  }
+
   onConnect(callback: () => void) {
     this.socket.on("connect", callback);
   }

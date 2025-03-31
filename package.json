@@ -13,7 +13,8 @@
     "server": "bun run --filter @shadow/server start",
     "dev": "bun run --filter @shadow/client dev & bun run --filter @shadow/server start",
     "build": "bun run --filter @shadow/client build",
-    "preview": "bun run --filter @shadow/client preview"
+    "preview": "bun run --filter @shadow/client preview",
+    "lint": "bun run --filter @shadow/client lint"
   },
   "type": "module",
   "workspaces": [
