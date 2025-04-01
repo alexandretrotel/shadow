@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
-const AccountPage = () => {
+export const Account = () => {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [copiedPublic, setCopiedPublic] = useState(false);
   const [copiedPrivate, setCopiedPrivate] = useState(false);
@@ -138,5 +138,3 @@ const AccountPage = () => {
     </>
   );
 };
-
-export default AccountPage;

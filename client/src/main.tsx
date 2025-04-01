@@ -1,31 +1,35 @@
 import "./index.css";
 
-import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Home } from "./pages/home/page.tsx";
-import { Toaster } from "@/components/ui/sonner.tsx";
-import Account from "./pages/account/page.tsx";
-import { ThemeProvider } from "./providers/theme-provider.tsx";
-import { motion } from "motion/react";
 import { Chat } from "./pages/chat/page.tsx";
+import { Account } from "./pages/account/page.tsx";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Root } from "./root.tsx";
 
-createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="bg-card text-foreground flex min-h-screen items-center justify-center px-4 antialiased md:px-0"
-      >
-        <Routes>
-          <Route index element={<Home />} />
-          <Route path="account" element={<Account />} />
-          <Route path="chat/:recipient" element={<Chat />} />
-        </Routes>
+const router = createBrowserRouter([
+  {
+    element: <Root />,
+    children: [
+      {
+        path: "/",
+        element: <Home />,
+      },
+      {
+        path: "/chat/:recipient",
+        element: <Chat />,
+      },
+      {
+        path: "/account",
+        element: <Account />,
+      },
+    ],
+  },
+]);
 
-        <Toaster />
-      </motion.div>
-    </ThemeProvider>
-  </BrowserRouter>,
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>,
 );
