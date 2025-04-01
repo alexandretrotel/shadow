@@ -8,7 +8,7 @@ interface ChatStore {
   clearMessages: (recipient: string) => void;
 }
 
-export const useChatStore = create<ChatStore>()(
+export const useChat = create<ChatStore>()(
   persist(
     (set) => ({
       messages: {},

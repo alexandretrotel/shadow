@@ -3,8 +3,9 @@ import { ChatContainer } from "@/components/chat/chat-container";
 import { Message } from "@shared/src/types";
 import { initializeSocket, useSocket } from "@/store/socket.store";
 import { toast } from "sonner";
-import { useChatStore } from "@/store/chat.store";
+import { useChat } from "@/store/chat.store";
 import { redirect, useParams } from "react-router-dom";
+import { useAuth } from "@/store/auth.store";
 
 export const Chat = () => {
   const { recipient } = useParams<{ recipient: string }>();
@@ -13,8 +14,8 @@ export const Chat = () => {
 
   initializeSocket();
   const { socket, closeSocket } = useSocket();
-
-  const { messages, addMessage, clearMessages } = useChatStore();
+  const { username } = useAuth();
+  const { messages, addMessage, clearMessages } = useChat();
 
   useEffect(() => {
     if (!socket) {
@@ -79,6 +80,12 @@ export const Chat = () => {
     return null;
   }
 
+  if (!username) {
+    toast.error("You are not authenticated");
+    redirect("/");
+    return null;
+  }
+
   return (
     <ChatContainer
       recipient={recipient}
@@ -87,6 +94,7 @@ export const Chat = () => {
       onLeave={() => clearMessages(recipient)}
       isTyping={isTyping}
       sendTyping={handleTyping}
+      username={username}
     />
   );
 };

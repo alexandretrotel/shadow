@@ -13,6 +13,7 @@ interface ChatRoomProps {
   onLeave: () => void;
   isTyping: boolean;
   sendTyping: () => void;
+  username: string;
 }
 
 export const ChatContainer = ({
@@ -22,6 +23,7 @@ export const ChatContainer = ({
   onLeave,
   isTyping,
   sendTyping,
+  username,
 }: ChatRoomProps) => {
   return (
     <motion.div
@@ -36,11 +38,12 @@ export const ChatContainer = ({
           "bg-background",
         )}
       >
-        <ChatHeader username={recipient} onLeave={onLeave} />
+        <ChatHeader recipient={recipient} onLeave={onLeave} />
         <MessageList
           messages={messages}
           recipient={recipient}
           isTyping={isTyping}
+          username={username}
         />
         <InputArea onSend={onSend} sendTyping={sendTyping} />
       </Card>

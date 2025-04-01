@@ -8,12 +8,14 @@ interface MessageListProps {
   messages: Message[];
   recipient: string;
   isTyping: boolean;
+  username: string;
 }
 
 export const MessageList = ({
   messages,
   recipient,
   isTyping,
+  username,
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

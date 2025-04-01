@@ -8,6 +8,7 @@ interface AuthStore {
   keyPair: string | null;
   setUsername: (username: string, password: string) => void;
   setKeyPair: (keyPair: nacl.BoxKeyPair, password: string) => void;
+  getKeyPair: (password: string) => Promise<nacl.BoxKeyPair | null>;
   clearAuth: () => void;
 }
 
@@ -28,7 +29,7 @@ const deriveKey = async (password: string) => {
   return crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt: encoder.encode("your-salt"), // Change to a randomly stored salt per user
+      salt: encoder.encode("your-salt"), // TODO: Change to a randomly stored salt per user
       iterations: 100000,
       hash: "SHA-256",
     },
@@ -97,6 +98,16 @@ export const useAuth = create<AuthStore>()(
         set({ keyPair: encryptedKeyPair });
       },
 
+      getKeyPair: async (password: string) => {
+        const encryptedKeyPair = useAuth.getState().keyPair;
+        if (!encryptedKeyPair) return null;
+
+        const decryptedKeyPair = await decryptData(encryptedKeyPair, password);
+        if (!decryptedKeyPair) return null;
+
+        return JSON.parse(decryptedKeyPair) as nacl.BoxKeyPair;
+      },
+
       clearAuth: () => set({ username: null, keyPair: null }),
     }),
     {
@@ -105,10 +116,10 @@ export const useAuth = create<AuthStore>()(
         getItem: async (name) => {
           const encrypted = localStorage.getItem(name);
           if (!encrypted) return null;
-          return await decryptData(encrypted, "user-password"); // Replace with user input
+          return await decryptData(encrypted, "user-password"); // TODO: Replace with user input
         },
         setItem: async (name, value) => {
-          const encrypted = await encryptData(value, "user-password"); // Replace with user input
+          const encrypted = await encryptData(value, "user-password"); // TOOD: Replace with user input
           localStorage.setItem(name, encrypted);
         },
         removeItem: (name) => localStorage.removeItem(name),

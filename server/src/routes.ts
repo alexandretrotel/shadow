@@ -64,4 +64,25 @@ export function setupRoutes(app: express.Express) {
       res.status(500).json({ error: "Login failed" });
     }
   });
+
+  app.get("/public-key/:username", async (req, res) => {
+    const { username } = req.params;
+
+    try {
+      // Fetch the user's public key from the database
+      const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.username, username))
+        .execute();
+
+      if (user.length === 0) {
+        res.status(404).json({ error: "User not found" });
+      }
+
+      res.status(200).json({ publicKey: user[0].publicKey });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch public key" });
+    }
+  });
 }

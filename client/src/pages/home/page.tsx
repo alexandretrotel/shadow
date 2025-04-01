@@ -3,9 +3,17 @@ import { WelcomeCard } from "./components/welcome-card";
 import { AddContact } from "./components/add-contact";
 import { ContactsList } from "./components/contacts-list";
 import { useContacts } from "@/store/contacts.store";
+import { useAuth } from "@/store/auth.store";
+import { useNavigate } from "react-router-dom";
 
 export const Home = () => {
   const { contacts } = useContacts();
+  const { username } = useAuth();
+  const navigate = useNavigate();
+
+  const startChat = (contact: string) => {
+    navigate(`/chat/${contact}`);
+  };
 
   if (!username) {
     return <WelcomeCard />;

@@ -12,3 +12,7 @@ export const privateKeySchema = z.object({
 export const usernameSchema = z.object({
   username: z.string().min(1, "Username is required"),
 });
+
+export const publicKeySchema = z.object({
+  publicKey: z.string().min(1, "Public key is required"),
+});
