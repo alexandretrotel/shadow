@@ -24,41 +24,22 @@ import {
   decode as decodeBase64,
 } from "@stablelib/base64";
 import nacl from "tweetnacl";
-import { MoreHorizontalIcon } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogCancel,
-  AlertDialogAction,
-  AlertDialogHeader,
-  AlertDialogFooter,
-} from "@/components/ui/alert-dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 const usernameSchema = z.object({
   username: z.string().min(1, "Username is required").max(30),
 });
 
-type UsernameFormData = z.infer<typeof usernameSchema>;
-
 const contactSchema = z.object({
   contact: z.string().min(1, "Contact is required"),
 });
 
+type UsernameFormData = z.infer<typeof usernameSchema>;
 type ContactFormData = z.infer<typeof contactSchema>;
 
 export function Home() {
   const [onlineStatus, setOnlineStatus] = useState<
     { username: string; online: boolean }[]
   >([]);
-
   const navigate = useNavigate();
   const { username, contacts, setUsername, addContact } = useChatStore();
   const { startChat } = useChat();
@@ -74,6 +55,9 @@ export function Home() {
   });
 
   useEffect(() => {
+    if (username && !socketService.getSocket().connected) {
+      socketService.connect(username);
+    }
     if (contacts.length) {
       socketService
         .getSocket()
@@ -85,26 +69,27 @@ export function Home() {
           },
         );
     }
-  }, [contacts]);
+  }, [contacts, username]);
 
-  const handleUsernameSubmit = (data: UsernameFormData) => {
-    socketService
-      .getSocket()
-      .emit(
-        "checkUsername",
-        { username: data.username },
-        ({ available }: { available: boolean }) => {
-          if (!available) {
-            toast.error("Username is already taken. Try another one.");
-          } else {
-            const keys = nacl.box.keyPair();
-            socketService.setKeyPair(keys);
-            socketService.register(data.username, encodeBase64(keys.publicKey));
-            setUsername(data.username);
-            toast.success(`Welcome, ${data.username}! Your account is ready.`);
-          }
-        },
-      );
+  const handleUsernameSubmit = async (data: UsernameFormData) => {
+    const { available } = await socketService.checkUsername(data.username);
+    if (!available) {
+      toast.error("Username is already taken. Try another one.");
+      return;
+    }
+    const keys = nacl.box.keyPair();
+    const response = await socketService.register(
+      data.username,
+      encodeBase64(keys.publicKey),
+    );
+    if (response.error) {
+      toast.error(response.error);
+      return;
+    }
+    socketService.setKeyPair(keys);
+    setUsername(data.username);
+    socketService.connect(data.username);
+    toast.success(`Welcome, ${data.username}! Your account is ready.`);
   };
 
   const handleStartChat = (contactUsername: string) => {
@@ -112,24 +97,19 @@ export function Home() {
     navigate(`/chat/${contactUsername}`);
   };
 
-  const handleAddContact = (data: ContactFormData) => {
-    socketService
-      .getSocket()
-      .emit("requestPublicKey", { username: data.contact });
-    socketService
-      .getSocket()
-      .once("publicKeys", ({ username: contactUsername, publicKey }) => {
-        if (publicKey) {
-          addContact({
-            username: contactUsername,
-            publicKey: decodeBase64(publicKey),
-          });
-          toast.success(`${contactUsername} added to your contacts!`);
-          contactForm.reset();
-        } else {
-          toast.error(`User ${data.contact} does not exist.`);
-        }
+  const handleAddContact = async (data: ContactFormData) => {
+    try {
+      const { username: contactUsername, publicKey } =
+        await socketService.getPublicKey(data.contact);
+      addContact({
+        username: contactUsername,
+        publicKey: decodeBase64(publicKey),
       });
+      toast.success(`${contactUsername} added to your contacts!`);
+      contactForm.reset();
+    } catch {
+      toast.error(`User ${data.contact} does not exist.`);
+    }
   };
 
   if (!username) {
@@ -243,71 +223,13 @@ export function Home() {
                     <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
                   )}
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleStartChat(contact.username)}
-                  >
-                    Chat
-                  </Button>
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground"
-                      >
-                        <MoreHorizontalIcon size={16} />
-                      </Button>
-                    </PopoverTrigger>
-
-                    <PopoverContent className="bg-card w-48 p-2">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive w-full"
-                          >
-                            Delete
-                          </Button>
-                        </AlertDialogTrigger>
-
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Contact</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete {contact.username}{" "}
-                              from your contacts? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => {
-                                useChatStore.setState((state) => ({
-                                  ...state,
-                                  contacts: state.contacts.filter(
-                                    (c) => c.username !== contact.username,
-                                  ),
-                                }));
-                                toast.success(`
-                              ${contact.username} removed from contacts.
-                            `);
-                              }}
-                              className="bg-destructive text-destructive-foreground"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleStartChat(contact.username)}
+                >
+                  Chat
+                </Button>
               </motion.div>
             ))
           ) : (
