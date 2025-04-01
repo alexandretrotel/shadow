@@ -9,7 +9,7 @@ aptPkgs = ["curl", "wget"]
 
 [phases.install]
 dependsOn = ["setup"]
-cmds = ["bun install]
+cmds = ["bun install"]
 
 [phases.build]
 dependsOn = ["install"]
