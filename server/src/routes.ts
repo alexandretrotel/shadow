@@ -11,12 +11,14 @@ import {
   decode as decodeBase64,
   encode as encodeBase64,
 } from "@stablelib/base64";
+import nacl from "tweetnacl";
 
 export function setupRoutes(app: express.Express) {
   app.post("/register", async (req, res) => {
     const { username, publicKey } = usernameAndPublicKeySchema.parse(req.body);
 
     try {
+      // Check if the username already exists
       const existingUser = await db
         .select()
         .from(users)
@@ -27,6 +29,7 @@ export function setupRoutes(app: express.Express) {
         res.status(409).json({ error: "Username taken" });
       }
 
+      // Insert the new user into the database
       await db.insert(users).values({ username, publicKey }).execute();
 
       res.status(201).json({ message: "User registered" });
@@ -38,20 +41,28 @@ export function setupRoutes(app: express.Express) {
   app.post("/login", async (req, res) => {
     const { privateKey } = privateKeySchema.parse(req.body);
     const publicKey = getPublicKeyFromPrivateKey(decodeBase64(privateKey));
-    const encodedPublicKey = encodeBase64(publicKey);
+    const publicKeyBase64 = encodeBase64(publicKey);
 
     try {
+      // Check if the user exists
       const user = await db
         .select()
         .from(users)
-        .where(eq(users.publicKey, encodedPublicKey))
+        .where(eq(users.publicKey, publicKeyBase64))
         .execute();
 
       if (user.length === 0) {
         res.status(401).json({ error: "Invalid credentials" });
       }
 
-      res.status(200).json({ message: "Login successful" });
+      // Return username and a simple session token
+      const sessionToken = encodeBase64(nacl.randomBytes(16)); // Temporary token
+
+      res.status(200).json({
+        message: "Login successful",
+        username: user[0].username,
+        sessionToken,
+      });
     } catch (error) {
       res.status(500).json({ error: "Login failed" });
     }
