@@ -18,7 +18,7 @@ export default defineConfig({
       },
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
-        name: "Shadow Chat",
+        name: "Shadow",
         short_name: "Shadow",
         description: "Whisper in the Dark – Secure, Ephemeral, Unseen.",
         theme_color: "#000000",
