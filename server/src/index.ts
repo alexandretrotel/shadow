@@ -1,58 +1,122 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { db } from "./db";
+import { users } from "./db/schema";
+import { eq } from "drizzle-orm";
 import nacl from "tweetnacl";
-import {
-  decode as decodeBase64,
-  encode as encodeBase64,
-} from "@stablelib/base64";
+import { decode as decodeBase64 } from "@stablelib/base64";
+import "dotenv/config";
+import { z } from "zod";
 
 const app = express();
+app.use(express.json());
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin:
+      process.env.NODE_ENV === "production"
+        ? "https://shadow.alexandretrotel.org"
+        : "*",
     methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
   },
 });
 
+// In-memory map for active socket IDs
+const activeUsers = new Map<string, string>(); // username -> socket.id
+
+// Middleware to verify socket connection
+io.use((socket, next) => {
+  const username = socket.handshake.auth.username;
+  if (!username) return next(new Error("Authentication required"));
+  next();
+});
+
+// Routes
 app.get("/", (_, res) => {
-  res.send("Server is running");
+  res.status(200).send("Server is running");
 });
 
-const serverNonce = Math.random().toString(36).slice(2);
-app.get("/nonce", (_, res) => {
-  res.json({ nonce: serverNonce });
+// User Registration
+const unvalidatedBody = z.object({
+  username: z.string(),
+  publicKey: z.string(),
 });
 
-// Map to store username -> socket ID
-const users = new Map<string, string>();
+app.post("/register", async (req, res) => {
+  const { username, publicKey } = unvalidatedBody.parse(req.body);
+  if (!username || !publicKey) {
+    res.status(400).json({ error: "Missing username or publicKey" });
+    return;
+  }
 
+  const decodedKey = decodeBase64(publicKey);
+  if (decodedKey.length !== nacl.box.publicKeyLength) {
+    res.status(400).json({ error: "Invalid public key length" });
+    return;
+  }
+
+  const existing = await db
+    .select()
+    .from(users)
+    .where(eq(users.username, username))
+    .limit(1);
+  if (existing.length > 0) {
+    if (existing[0].publicKey !== publicKey) {
+      res.status(409).json({ error: "Username taken with different key" });
+      return;
+    }
+    res.status(200).json({ message: "User already registered" });
+    return;
+  }
+
+  await db.insert(users).values({ username, publicKey });
+  res.status(201).json({ message: "User registered" });
+});
+
+// Check Username Availability
+const unvalidatedUsernameParams = z.object({
+  username: z.string(),
+});
+
+app.get("/username/:username", async (req, res) => {
+  const { username } = unvalidatedUsernameParams.parse(req.params);
+  const existing = await db
+    .select()
+    .from(users)
+    .where(eq(users.username, username))
+    .limit(1);
+  res.status(200).json({ available: existing.length === 0 });
+});
+
+// Get Public Key
+const unvalidatedPublicKeyParams = z.object({
+  username: z.string(),
+});
+
+app.get("/publicKey/:username", async (req, res) => {
+  const { username } = unvalidatedPublicKeyParams.parse(req.params);
+  const user = await db
+    .select()
+    .from(users)
+    .where(eq(users.username, username))
+    .limit(1);
+  if (user.length === 0) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  res.json({ publicKey: user[0].publicKey });
+});
+
+// Socket.IO Real-Time Logic
 io.on("connection", (socket) => {
   console.log(`Socket ${socket.id} connected at ${new Date().toISOString()}`);
-
-  socket.on(
-    "register",
-    ({ username, publicKey }: { username: string; publicKey: string }) => {
-      const decodedKey = decodeBase64(publicKey);
-      if (decodedKey.length !== nacl.box.publicKeyLength) {
-        socket.emit("error", "Invalid public key length");
-        return;
-      }
-      users.set(username, socket.id);
-      socket.handshake.auth = { username, publicKey: decodedKey };
-      console.log(`User ${username} registered with socket ${socket.id}`);
-    }
-  );
-
-  socket.on("checkUsername", ({ username }: { username: string }, callback) => {
-    callback({ available: !users.has(username) });
-  });
+  const username = socket.handshake.auth.username;
+  activeUsers.set(username, socket.id);
 
   socket.on(
     "message",
-    ({
+    async ({
       recipient,
       encryptedContent,
       timer,
@@ -60,25 +124,32 @@ io.on("connection", (socket) => {
     }: {
       recipient: string;
       encryptedContent: string;
-      timer?: number;
+      timer: number;
       messageId: string;
     }) => {
-      const recipientSocketId = users.get(recipient);
+      const recipientUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.username, recipient))
+        .limit(1);
+      if (recipientUser.length === 0) {
+        socket.emit("error", `User ${recipient} not found`);
+        return;
+      }
+      const recipientSocketId = activeUsers.get(recipient);
       if (recipientSocketId) {
-        console.log(`Message from ${socket.id} to ${recipient}:`, {
-          messageId,
-          timer,
-        });
         io.to(recipientSocketId).emit("message", {
-          sender: Array.from(users.entries()).find(
-            ([_, id]) => id === socket.id
-          )?.[0],
+          sender: username,
           encryptedContent,
           timer,
           messageId,
         });
       } else {
-        socket.emit("error", `User ${recipient} not found`);
+        socket.emit("messageStatus", {
+          messageId,
+          status: "failed",
+          reason: "Recipient offline",
+        });
       }
     }
   );
@@ -86,108 +157,31 @@ io.on("connection", (socket) => {
   socket.on(
     "typing",
     ({ recipient, username }: { recipient: string; username: string }) => {
-      const recipientSocketId = users.get(recipient);
-      if (recipientSocketId) {
+      const recipientSocketId = activeUsers.get(recipient);
+      if (recipientSocketId)
         socket.to(recipientSocketId).emit("typing", { username });
-      }
     }
   );
 
   socket.on("messageRead", ({ messageId }: { messageId: string }) => {
-    console.log(`Message ${messageId} read by ${socket.id}`);
-  });
-
-  socket.on(
-    "editMessage",
-    ({
-      recipient,
-      messageId,
-      encryptedContent,
-    }: {
-      recipient: string;
-      messageId: string;
-      encryptedContent: string;
-    }) => {
-      const recipientSocketId = users.get(recipient);
-      if (recipientSocketId) {
-        io.to(recipientSocketId).emit("messageEdited", {
-          messageId,
-          encryptedContent,
-        });
-      }
-    }
-  );
-
-  socket.on(
-    "deleteMessage",
-    ({ recipient, messageId }: { recipient: string; messageId: string }) => {
-      const recipientSocketId = users.get(recipient);
-      if (recipientSocketId) {
-        io.to(recipientSocketId).emit("messageDeleted", { messageId });
-      }
-    }
-  );
-
-  socket.on(
-    "reactToMessage",
-    ({
-      recipient,
-      messageId,
-      reaction,
-    }: {
-      recipient: string;
-      messageId: string;
-      reaction: string;
-    }) => {
-      const recipientSocketId = users.get(recipient);
-      if (recipientSocketId) {
-        io.to(recipientSocketId).emit("messageReaction", {
-          messageId,
-          sender: Array.from(users.entries()).find(
-            ([_, id]) => id === socket.id
-          )?.[0],
-          reaction,
-        });
-      }
-    }
-  );
-
-  socket.on("requestPublicKey", ({ username }: { username: string }) => {
-    const socketId = users.get(username);
-    if (socketId) {
-      const user = io.sockets.sockets.get(socketId)?.handshake.auth;
-      if (user) {
-        socket.emit("publicKeys", {
-          username,
-          publicKey: encodeBase64(user.publicKey),
-        });
-      }
-    }
-  });
-
-  socket.on(
-    "getOnlineStatus",
-    ({ usernames }: { usernames: string[] }, callback) => {
-      const status = usernames.map((u) => ({
-        username: u,
-        online: users.has(u),
-      }));
-      callback(status);
-    }
-  );
-
-  socket.on("disconnect", (reason) => {
-    console.log(`Socket ${socket.id} disconnected. Reason: ${reason}`);
-    const username = Array.from(users.entries()).find(
+    const sender = Array.from(activeUsers.entries()).find(
       ([_, id]) => id === socket.id
     )?.[0];
-    if (username) {
-      users.delete(username);
+    const senderSocketId = activeUsers.get(sender || "");
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("messageStatus", {
+        messageId,
+        status: "read",
+      });
     }
   });
 
-  socket.on("connect_error", (err) => {
-    console.error(`Socket ${socket.id} connect_error: ${err.message}`);
+  socket.on("disconnect", () => {
+    console.log(`Socket ${socket.id} disconnected`);
+    const username = Array.from(activeUsers.entries()).find(
+      ([_, id]) => id === socket.id
+    )?.[0];
+    if (username) activeUsers.delete(username);
   });
 });
 
