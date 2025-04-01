@@ -1,14 +1,20 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { db } from "./db";
-import { users } from "./db/schema";
+import { db } from "../../shared/db";
+import { users } from "../../shared/db/schema";
 import { eq } from "drizzle-orm";
 import nacl from "tweetnacl";
 import { decode as decodeBase64 } from "@stablelib/base64";
 import "dotenv/config";
-import { z } from "zod";
 import cors from "cors";
+import {
+  messageSchema,
+  typingSchema,
+  usernameAndPubKeySchema,
+  usernameSchema,
+  userSchema,
+} from "../../shared/schemas";
 
 const app = express();
 
@@ -44,7 +50,9 @@ const activeUsers = new Map<string, string>(); // username -> socket.id
 // Middleware to verify socket connection
 io.use((socket, next) => {
   const username = socket.handshake.auth.username;
-  if (!username) return next(new Error("Authentication required"));
+  if (!userSchema.shape.username.safeParse(username).success) {
+    return next(new Error("Invalid username"));
+  }
   next();
 });
 
@@ -54,13 +62,9 @@ app.get("/", (_, res) => {
 });
 
 // User Registration
-const unvalidatedBody = z.object({
-  username: z.string(),
-  publicKey: z.string(),
-});
 
 app.post("/register", async (req, res) => {
-  const { username, publicKey } = unvalidatedBody.parse(req.body);
+  const { username, publicKey } = usernameAndPubKeySchema.parse(req.body);
   if (!username || !publicKey) {
     res.status(400).json({ error: "Missing username or publicKey" });
     return;
@@ -91,12 +95,9 @@ app.post("/register", async (req, res) => {
 });
 
 // Check Username Availability
-const unvalidatedUsernameParams = z.object({
-  username: z.string(),
-});
 
 app.get("/username/:username", async (req, res) => {
-  const { username } = unvalidatedUsernameParams.parse(req.params);
+  const { username } = usernameSchema.parse(req.params);
   const existing = await db
     .select()
     .from(users)
@@ -106,12 +107,8 @@ app.get("/username/:username", async (req, res) => {
 });
 
 // Get Public Key
-const unvalidatedPublicKeyParams = z.object({
-  username: z.string(),
-});
-
 app.get("/publicKey/:username", async (req, res) => {
-  const { username } = unvalidatedPublicKeyParams.parse(req.params);
+  const { username } = usernameSchema.parse(req.params);
   const user = await db
     .select()
     .from(users)
@@ -130,54 +127,52 @@ io.on("connection", (socket) => {
   const username = socket.handshake.auth.username;
   activeUsers.set(username, socket.id);
 
-  socket.on(
-    "message",
-    async ({
-      recipient,
-      encryptedContent,
-      timer,
-      messageId,
-    }: {
-      recipient: string;
-      encryptedContent: string;
-      timer: number;
-      messageId: string;
-    }) => {
-      const recipientUser = await db
-        .select()
-        .from(users)
-        .where(eq(users.username, recipient))
-        .limit(1);
-      if (recipientUser.length === 0) {
-        socket.emit("error", `User ${recipient} not found`);
-        return;
-      }
-      const recipientSocketId = activeUsers.get(recipient);
-      if (recipientSocketId) {
-        io.to(recipientSocketId).emit("message", {
-          sender: username,
-          encryptedContent,
-          timer,
-          messageId,
-        });
-      } else {
-        socket.emit("messageStatus", {
-          messageId,
-          status: "failed",
-          reason: "Recipient offline",
-        });
-      }
+  socket.on("message", async (data) => {
+    const parsed = messageSchema.safeParse(data);
+    if (!parsed.success) {
+      socket.emit("error", "Invalid message format");
+      return;
     }
-  );
+    const { recipient, encryptedContent, timer, messageId } = parsed.data;
 
-  socket.on(
-    "typing",
-    ({ recipient, username }: { recipient: string; username: string }) => {
-      const recipientSocketId = activeUsers.get(recipient);
-      if (recipientSocketId)
-        socket.to(recipientSocketId).emit("typing", { username });
+    const recipientUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, recipient))
+      .limit(1);
+    if (recipientUser.length === 0) {
+      socket.emit("error", `User ${recipient} not found`);
+      return;
     }
-  );
+    const recipientSocketId = activeUsers.get(recipient);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("message", {
+        sender: username,
+        encryptedContent,
+        timer,
+        messageId,
+      });
+    } else {
+      socket.emit("messageStatus", {
+        messageId,
+        status: "failed",
+        reason: "Recipient offline",
+      });
+    }
+  });
+
+  socket.on("typing", (data) => {
+    const parsed = typingSchema.safeParse(data);
+    if (!parsed.success) {
+      socket.emit("error", "Invalid typing data");
+      return;
+    }
+    const { recipient, username } = parsed.data;
+
+    const recipientSocketId = activeUsers.get(recipient);
+    if (recipientSocketId)
+      socket.to(recipientSocketId).emit("typing", { username });
+  });
 
   socket.on("messageRead", ({ messageId }: { messageId: string }) => {
     const sender = Array.from(activeUsers.entries()).find(
