@@ -134,55 +134,48 @@ export function Home() {
 
   if (!username) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full px-4"
-      >
-        <Card className="mx-auto mt-10 max-w-md border-none shadow-none">
-          <CardHeader>
-            <CardTitle className="text-secondary-foreground text-2xl tracking-wide">
-              Welcome to Shadow
-            </CardTitle>
-            <p className="text-muted-foreground text-sm">
-              Choose a username to get started
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Form {...usernameForm}>
-              <form
-                onSubmit={usernameForm.handleSubmit(handleUsernameSubmit)}
-                className="space-y-4"
+      <Card className="mx-auto mt-10 max-w-md border-none shadow-none">
+        <CardHeader>
+          <CardTitle className="text-secondary-foreground text-2xl tracking-wide">
+            Welcome to Shadow
+          </CardTitle>
+          <p className="text-muted-foreground text-sm">
+            Choose a username to get started
+          </p>
+        </CardHeader>
+        <CardContent>
+          <Form {...usernameForm}>
+            <form
+              onSubmit={usernameForm.handleSubmit(handleUsernameSubmit)}
+              className="space-y-4"
+            >
+              <FormField
+                control={usernameForm.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., ShadowUser"
+                        {...field}
+                        className="bg-muted text-foreground placeholder-muted-foreground border-none"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                className="bg-primary text-primary-foreground w-full"
               >
-                <FormField
-                  control={usernameForm.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., ShadowUser"
-                          {...field}
-                          className="bg-muted text-foreground placeholder-muted-foreground border-none"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  className="bg-primary text-primary-foreground w-full"
-                >
-                  Create Account
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </motion.div>
+                Create Account
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     );
   }
 
