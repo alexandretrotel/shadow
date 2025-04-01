@@ -13,10 +13,10 @@ createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-card text-foreground flex min-h-screen items-center justify-center px-4 antialiased"
+        className="bg-card text-foreground flex min-h-screen items-center justify-center px-4 antialiased md:px-0"
       >
         <Routes>
           <Route index element={<Home />} />

@@ -22,17 +22,11 @@ const Account = () => {
 
   useEffect(() => {
     if (!keyPair) return;
-
     const generateQRCode = async () => {
-      try {
-        const QRCode = await import("qrcode");
-        const dataUrl = await QRCode.toDataURL(publicKeyBase64);
-        setQrCode(dataUrl);
-      } catch (error) {
-        console.error("QR Code generation failed:", error);
-      }
+      const QRCode = await import("qrcode");
+      const dataUrl = await QRCode.toDataURL(publicKeyBase64);
+      setQrCode(dataUrl);
     };
-
     generateQRCode();
   }, [keyPair, publicKeyBase64]);
 
@@ -52,59 +46,77 @@ const Account = () => {
 
   return (
     <Card className="w-full max-w-md border-none shadow-none">
-      <CardHeader className="flex items-center justify-between">
-        <CardTitle className="text-secondary-foreground text-lg tracking-wide">
+      <CardHeader>
+        <CardTitle className="text-secondary-foreground text-2xl font-semibold tracking-wide">
           Account Details
         </CardTitle>
-        <Button variant="ghost" onClick={() => navigate("/")}>
-          Home
-        </Button>
+        <p className="text-muted-foreground text-sm">
+          Manage your Shadow account
+        </p>
       </CardHeader>
-
-      <CardContent className="space-y-6 text-center">
-        <div className="flex flex-col items-center gap-2">
-          <h2 className="text-xl font-semibold">@{username}</h2>
-
-          <div
-            className={cn(
-              "bg-muted hover:bg-secondary group relative flex w-full cursor-pointer items-center justify-center rounded-md border p-2 text-sm transition",
-              copiedPublic ? "opacity-50" : "opacity-100",
-            )}
-            onClick={handleCopyPublic}
-          >
-            <span className="truncate blur-md transition-all duration-200 group-hover:blur-none">
+      <CardContent className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-primary text-xl font-semibold">@{username}</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Your Shadow identity
+          </p>
+        </div>
+        <div className="space-y-6">
+          <div>
+            <p className="text-muted-foreground mb-2 text-sm">Public Key</p>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start truncate py-3",
+                copiedPublic ? "opacity-50" : "opacity-100",
+              )}
+              onClick={handleCopyPublic}
+            >
+              {copiedPublic ? (
+                <Check className="mr-2 h-5 w-5" />
+              ) : (
+                <Clipboard className="mr-2 h-5 w-5" />
+              )}
               {publicKeyBase64}
-            </span>
+            </Button>
+          </div>
+          {qrCode && (
+            <div className="flex justify-center">
+              <img
+                src={qrCode}
+                alt="Public Key QR"
+                className="mt-4 max-w-[220px] rounded-md border shadow-md"
+              />
+            </div>
+          )}
+          <div>
+            <p className="text-muted-foreground mb-2 text-sm">Private Key</p>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start py-3",
+                copiedPrivate ? "opacity-50" : "opacity-100",
+              )}
+              onClick={handleCopyPrivate}
+            >
+              {copiedPrivate ? (
+                <Check className="mr-2 h-5 w-5" />
+              ) : (
+                <Clipboard className="mr-2 h-5 w-5" />
+              )}
+              {copiedPrivate ? "Copied!" : "Copy Private Key (Keep Safe!)"}
+            </Button>
+            <p className="text-destructive mt-2 text-xs">
+              Warning: Never share your private key!
+            </p>
           </div>
         </div>
-
-        <div className="flex flex-col items-center">
-          {qrCode ? (
-            <img
-              src={qrCode}
-              alt="Public Key QR"
-              className="rounded-md border shadow-sm"
-            />
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Generating QR Code...
-            </p>
-          )}
-        </div>
-
         <Button
-          className={cn(
-            "bg-secondary text-secondary-foreground flex w-full items-center justify-center gap-2 transition-all",
-            copiedPrivate ? "bg-green-500 hover:bg-green-500" : "",
-          )}
-          onClick={handleCopyPrivate}
+          variant="ghost"
+          className="mt-6 w-full py-3"
+          onClick={() => navigate("/")}
         >
-          {copiedPrivate ? (
-            <Check className="h-5 w-5" />
-          ) : (
-            <Clipboard className="h-5 w-5" />
-          )}
-          {copiedPrivate ? "Copied!" : "Copy Private Key (Keep Safe!)"}
+          Back to Home
         </Button>
       </CardContent>
     </Card>

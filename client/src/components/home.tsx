@@ -19,8 +19,28 @@ import { useChat } from "@/hooks/use-chat";
 import { socketService } from "@/lib/socket-service";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { encode as encodeBase64 } from "@stablelib/base64";
+import {
+  encode as encodeBase64,
+  decode as decodeBase64,
+} from "@stablelib/base64";
 import nacl from "tweetnacl";
+import { MoreHorizontalIcon } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+  AlertDialogHeader,
+  AlertDialogFooter,
+} from "@/components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const usernameSchema = z.object({
   username: z.string().min(1, "Username is required").max(30),
@@ -40,8 +60,18 @@ export function Home() {
   >([]);
 
   const navigate = useNavigate();
-  const { username, contacts, setUsername } = useChatStore();
+  const { username, contacts, setUsername, addContact } = useChatStore();
   const { startChat } = useChat();
+
+  const usernameForm = useForm<UsernameFormData>({
+    resolver: zodResolver(usernameSchema),
+    defaultValues: { username: username || "" },
+  });
+
+  const contactForm = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: { contact: "" },
+  });
 
   useEffect(() => {
     if (contacts.length) {
@@ -57,16 +87,6 @@ export function Home() {
     }
   }, [contacts]);
 
-  const usernameForm = useForm<UsernameFormData>({
-    resolver: zodResolver(usernameSchema),
-    defaultValues: { username: username || "" },
-  });
-
-  const addContactForm = useForm<ContactFormData>({
-    resolver: zodResolver(contactSchema),
-    defaultValues: { contact: "" },
-  });
-
   const handleUsernameSubmit = (data: UsernameFormData) => {
     socketService
       .getSocket()
@@ -75,12 +95,13 @@ export function Home() {
         { username: data.username },
         ({ available }: { available: boolean }) => {
           if (!available) {
-            toast.error("Username taken");
+            toast.error("Username is already taken. Try another one.");
           } else {
             const keys = nacl.box.keyPair();
             socketService.setKeyPair(keys);
             socketService.register(data.username, encodeBase64(keys.publicKey));
             setUsername(data.username);
+            toast.success(`Welcome, ${data.username}! Your account is ready.`);
           }
         },
       );
@@ -91,8 +112,24 @@ export function Home() {
     navigate(`/chat/${contactUsername}`);
   };
 
-  const handleAddContact = (contactUsername: string) => {
-    socketService.requestPublicKey(contactUsername);
+  const handleAddContact = (data: ContactFormData) => {
+    socketService
+      .getSocket()
+      .emit("requestPublicKey", { username: data.contact });
+    socketService
+      .getSocket()
+      .once("publicKeys", ({ username: contactUsername, publicKey }) => {
+        if (publicKey) {
+          addContact({
+            username: contactUsername,
+            publicKey: decodeBase64(publicKey),
+          });
+          toast.success(`${contactUsername} added to your contacts!`);
+          contactForm.reset();
+        } else {
+          toast.error(`User ${data.contact} does not exist.`);
+        }
+      });
   };
 
   if (!username) {
@@ -105,9 +142,12 @@ export function Home() {
       >
         <Card className="mx-auto mt-10 max-w-md border-none shadow-none">
           <CardHeader>
-            <CardTitle className="text-secondary-foreground text-lg tracking-wide">
-              Set Your Username
+            <CardTitle className="text-secondary-foreground text-2xl tracking-wide">
+              Welcome to Shadow
             </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Choose a username to get started
+            </p>
           </CardHeader>
           <CardContent>
             <Form {...usernameForm}>
@@ -119,30 +159,25 @@ export function Home() {
                   control={usernameForm.control}
                   name="username"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col gap-3">
-                      <FormLabel>Pseudonym</FormLabel>
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="John The Ripper"
+                          placeholder="e.g., ShadowUser"
                           {...field}
-                          className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent border-none"
+                          className="bg-muted text-foreground placeholder-muted-foreground border-none"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
+                <Button
+                  type="submit"
+                  className="bg-primary text-primary-foreground w-full"
                 >
-                  <Button
-                    type="submit"
-                    className="bg-secondary text-secondary-foreground w-full"
-                  >
-                    Enter the Shadows
-                  </Button>
-                </motion.div>
+                  Create Account
+                </Button>
               </form>
             </Form>
           </CardContent>
@@ -152,98 +187,143 @@ export function Home() {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="w-full px-4"
-    >
-      <Card className="mx-auto mt-12 max-w-md border-none shadow-none">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle className="text-secondary-foreground text-lg tracking-wide">
-            Contacts
-          </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/account")}
-            className="text-sm"
+    <Card className="w-full max-w-md gap-8 border-none shadow-none">
+      <CardHeader>
+        <CardTitle className="text-secondary-foreground text-2xl tracking-wide">
+          Welcome, @{username}
+        </CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/account")}
+          className="mt-2"
+        >
+          Manage Account
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-8">
+        <Form {...contactForm}>
+          <form
+            onSubmit={contactForm.handleSubmit(handleAddContact)}
+            className="space-y-4"
           >
-            My Account
-          </Button>
-        </CardHeader>
-
-        <CardContent>
-          <div className="space-y-8">
-            <Form {...addContactForm}>
-              <form
-                className="flex flex-col gap-3"
-                onSubmit={addContactForm.handleSubmit((data) => {
-                  handleAddContact(data.contact);
-                  addContactForm.reset();
-                })}
-              >
-                <FormField
-                  control={addContactForm.control}
-                  name="contact"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Add a Contact</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter username"
-                          {...field}
-                          className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent w-full border-none"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  className="bg-secondary text-secondary-foreground"
-                >
-                  Add Contact
-                </Button>
-              </form>
-            </Form>
-
-            <div className="space-y-2">
-              {contacts.length > 0 ? (
-                contacts.map((contact) => (
-                  <motion.div
-                    key={contact.username}
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-muted flex items-center justify-between rounded-md p-3 shadow-sm"
-                  >
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      {contact.username}
-                      {onlineStatus.find((s) => s.username === contact.username)
-                        ?.online && (
-                        <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="hover:text-foreground text-muted-foreground"
-                      onClick={() => handleStartChat(contact.username)}
-                    >
-                      Chat
-                    </Button>
-                  </motion.div>
-                ))
-              ) : (
-                <p className="text-muted-foreground text-center text-sm">
-                  No contacts yet. Add someone to start chatting!
-                </p>
+            <FormField
+              control={contactForm.control}
+              name="contact"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Add Contact</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., ShadowFriend"
+                      {...field}
+                      className="bg-muted text-foreground placeholder-muted-foreground border-none"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+            />
+            <Button
+              type="submit"
+              className="bg-primary text-primary-foreground w-full"
+            >
+              Add Contact
+            </Button>
+          </form>
+        </Form>
+        <div className="space-y-2">
+          <h3 className="text-muted-foreground text-sm font-medium">
+            Your Contacts
+          </h3>
+          {contacts.length > 0 ? (
+            contacts.map((contact) => (
+              <motion.div
+                key={contact.username}
+                whileHover={{ scale: 1.02 }}
+                className="bg-muted flex items-center justify-between rounded-md p-3 shadow-sm"
+              >
+                <div className="flex items-center gap-2">
+                  <span>{contact.username}</span>
+                  {onlineStatus.find((s) => s.username === contact.username)
+                    ?.online && (
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleStartChat(contact.username)}
+                  >
+                    Chat
+                  </Button>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground"
+                      >
+                        <MoreHorizontalIcon size={16} />
+                      </Button>
+                    </PopoverTrigger>
+
+                    <PopoverContent className="bg-card w-48 p-2">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive w-full"
+                          >
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Contact</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete {contact.username}{" "}
+                              from your contacts? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => {
+                                useChatStore.setState((state) => ({
+                                  ...state,
+                                  contacts: state.contacts.filter(
+                                    (c) => c.username !== contact.username,
+                                  ),
+                                }));
+                                toast.success(`
+                              ${contact.username} removed from contacts.
+                            `);
+                              }}
+                              className="bg-destructive text-destructive-foreground"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <p className="text-muted-foreground text-xs">
+              No contacts yet. Add someone to start chatting!
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
