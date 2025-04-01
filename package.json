@@ -1,21 +1,10 @@
 {
   "name": "shadow",
-  "module": "index.ts",
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5.8.2"
-  },
   "private": true,
   "scripts": {
     "client": "bun run --filter @shadow/client dev",
     "server": "bun run --filter @shadow/server start",
-    "dev": "bun run --filter @shadow/client dev & bun run --filter @shadow/server start",
-    "build": "bun run --filter @shadow/client build",
-    "preview": "bun run --filter @shadow/client preview",
-    "lint": "bun run --filter @shadow/client lint",
-    "format": "bun run --filter @shadow/client format"
+    "dev": "bun run --filter @shadow/client dev & bun run --filter @shadow/server start"
   },
   "type": "module",
   "workspaces": [

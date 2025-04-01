@@ -4,7 +4,6 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target node",
     "start": "bun run src/index.ts"
   },
   "devDependencies": {
