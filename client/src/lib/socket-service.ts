@@ -76,6 +76,12 @@ export class SocketService {
     timer?: number,
   ) {
     if (!this.keyPair) return;
+    if (recipientPublicKey.length !== nacl.box.publicKeyLength) {
+      console.error(
+        `Invalid public key length: ${recipientPublicKey.length}, expected ${nacl.box.publicKeyLength}`,
+      );
+      return;
+    }
     const messageId = `${Date.now()}${Math.random().toString(36).slice(2)}`;
     const nonce = nacl.randomBytes(nacl.box.nonceLength);
     const encrypted = nacl.box(
@@ -84,6 +90,10 @@ export class SocketService {
       recipientPublicKey,
       this.keyPair.secretKey,
     );
+    if (!encrypted) {
+      console.error("Encryption failed");
+      return;
+    }
     const fullMessage = new Uint8Array(nonce.length + encrypted.length);
     fullMessage.set(nonce);
     fullMessage.set(encrypted, nonce.length);

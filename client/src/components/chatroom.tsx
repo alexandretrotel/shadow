@@ -108,7 +108,7 @@ export const ChatRoom = memo(function ChatRoom({
   };
 
   return (
-    <Card className="mx-auto flex h-screen w-full flex-col gap-0 border-none py-0 shadow-lg">
+    <Card className="mx-auto flex min-h-screen w-full flex-col gap-0 border-none py-0 shadow-lg">
       <CardHeader className="border-muted flex-shrink-0 border-b pt-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

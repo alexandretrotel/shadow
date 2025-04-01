@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { ChatState, Message, Participant } from "@/types/chat";
 import { encode as encodeBase64 } from "@stablelib/base64";
+import { useEffect } from "react";
 
 type ChatStore = ChatState & {
   currentRecipient: string;
@@ -14,7 +15,10 @@ type ChatStore = ChatState & {
   addContact: (contact: Participant) => void;
   addTypingUser: (username: string) => void;
   removeTypingUser: (username: string) => void;
+  serverNonce: string;
+  setServerNonce: (nonce: string) => void;
   reset: () => void;
+  initialize: () => void;
 };
 
 export const useChatStore = create<ChatStore>()(
@@ -25,6 +29,7 @@ export const useChatStore = create<ChatStore>()(
       typingUsers: [],
       currentRecipient: "",
       contacts: [],
+      serverNonce: "",
       setUsername: (username) => set((state) => ({ ...state, username })),
       setCurrentRecipient: (recipient) =>
         set((state) => ({ ...state, currentRecipient: recipient })),
@@ -52,6 +57,8 @@ export const useChatStore = create<ChatStore>()(
           ...state,
           typingUsers: state.typingUsers.filter((u) => u !== username),
         })),
+      setServerNonce: (nonce) =>
+        set((state) => ({ ...state, serverNonce: nonce })),
       reset: () =>
         set({
           username: "",
@@ -60,6 +67,17 @@ export const useChatStore = create<ChatStore>()(
           currentRecipient: "",
           contacts: [],
         }),
+      initialize: () => {
+        fetch("/nonce")
+          .then((res) => res.json())
+          .then(({ nonce }) => {
+            const state = useChatStore.getState();
+            if (state.serverNonce && state.serverNonce !== nonce) {
+              state.reset();
+            }
+            state.setServerNonce(nonce);
+          });
+      },
     }),
     {
       name: "chat-store",
@@ -67,11 +85,9 @@ export const useChatStore = create<ChatStore>()(
         username: state.username,
         contacts: state.contacts.map((c) => ({
           username: c.username,
-          publicKey:
-            c.publicKey instanceof Uint8Array
-              ? encodeBase64(c.publicKey)
-              : c.publicKey,
+          publicKey: encodeBase64(c.publicKey),
         })),
+        serverNonce: state.serverNonce,
       }),
       merge: (persisted, current) => {
         const persistedState = persisted as Partial<ChatStore>;
@@ -88,3 +104,10 @@ export const useChatStore = create<ChatStore>()(
     },
   ),
 );
+
+export const useInitialize = () => {
+  const initialize = useChatStore((state) => state.initialize);
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+};
