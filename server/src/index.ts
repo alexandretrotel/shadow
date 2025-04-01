@@ -1,8 +1,8 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { db } from "../../shared/db";
-import { users } from "../../shared/db/schema";
+import { db } from "@shadow/shared/db";
+import { users } from "@shadow/shared/db/schema";
 import { eq } from "drizzle-orm";
 import nacl from "tweetnacl";
 import { decode as decodeBase64 } from "@stablelib/base64";
@@ -14,7 +14,7 @@ import {
   usernameAndPubKeySchema,
   usernameSchema,
   userSchema,
-} from "../../shared/schemas";
+} from "@shadow/shared/schemas";
 
 const app = express();
 
