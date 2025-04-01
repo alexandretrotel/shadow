@@ -1,5 +1,5 @@
 import type { Server } from "socket.io";
-import type { Message } from "@shared/src/types";
+import type { Message } from "../../common/src/types";
 
 interface ConnectedUsers {
   [username: string]: string; // Maps username to socket.id

@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/store/auth.store";
 import { useNavigate } from "react-router-dom";
 import { decode } from "@stablelib/base64";
-import { getPublicKeyFromPrivateKey } from "@shared/src/crypto";
+import { getPublicKeyFromPrivateKey } from "../../../../../../common/src/crypto";
 import {
   importFormSchema,
   ImportFormSchema,

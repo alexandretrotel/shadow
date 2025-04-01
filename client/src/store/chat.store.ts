@@ -1,4 +1,4 @@
-import { Message } from "@shared/src/types";
+import { Message } from "../../../common/src/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 

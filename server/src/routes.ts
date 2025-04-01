@@ -1,12 +1,12 @@
 import express from "express";
-import { db } from "@shared/db";
+import { db } from "../../common/db";
 import { eq } from "drizzle-orm";
-import { users } from "@shared/db/schema";
+import { users } from "../../common/db/schema";
 import {
   privateKeySchema,
   usernameAndPublicKeySchema,
-} from "@shared/src/schemas";
-import { getPublicKeyFromPrivateKey } from "@shared/src/crypto";
+} from "../../common/src/schemas";
+import { getPublicKeyFromPrivateKey } from "../../common/src/crypto";
 import { decode, encode } from "@stablelib/base64";
 import nacl from "tweetnacl";
 

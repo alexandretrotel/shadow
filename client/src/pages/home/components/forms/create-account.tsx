@@ -9,7 +9,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { generateKeyPair } from "@shared/src/crypto";
+import { generateKeyPair } from "../../../../../../common/src/crypto";
 import { toast } from "sonner";
 import {
   createAccountFormSchema,

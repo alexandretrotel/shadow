@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import VoiceMessage from "./voice-message";
 import { cn } from "@/lib/utils";
 import { featureFlags } from "@/lib/features";
-import { Message } from "@shared/src/types";
+import { Message } from "../../../../common/src/types";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 

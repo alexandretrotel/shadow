@@ -10,7 +10,7 @@
   "workspaces": [
     "server",
     "client",
-    "shared"
+    "common"
   ],
   "dependencies": {
     "react-router-dom": "^7.4.1"
