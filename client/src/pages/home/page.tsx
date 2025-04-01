@@ -25,7 +25,7 @@ export const Home = () => {
         <h2 className="text-2xl font-semibold">Welcome, @{username}</h2>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="space-y-8">
         <AddContact />
         <ContactsList contacts={contacts} startChat={startChat} />
       </CardContent>

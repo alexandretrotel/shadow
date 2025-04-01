@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import nacl from "tweetnacl";
-import crypto from "crypto";
 
 interface AuthStore {
   username: string | null;
@@ -15,24 +14,29 @@ interface AuthStore {
   clearAuth: () => void;
 }
 
-// AES Configuration
+// AES-GCM configuration
 const ALGORITHM = "AES-GCM";
-const IV_LENGTH = 12;
+const IV_LENGTH = 12; // 96-bit IV for AES-GCM
 
-const deriveKey = async (password: string) => {
+// Derive an encryption key from the password using PBKDF2
+const deriveKey = async (password: string): Promise<CryptoKey> => {
   const encoder = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
+  const passwordBuffer = encoder.encode(password);
+
+  // Import the password as a key for PBKDF2
+  const keyMaterial = await window.crypto.subtle.importKey(
     "raw",
-    encoder.encode(password),
+    passwordBuffer,
     { name: "PBKDF2" },
     false,
     ["deriveKey"],
   );
 
-  return crypto.subtle.deriveKey(
+  // Derive a 256-bit AES-GCM key
+  return window.crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt: encoder.encode("shadow-salt"), // Use a consistent salt; consider per-user salts in production
+      salt: encoder.encode("shadow-salt"), // Consistent salt; consider per-user salts in production
       iterations: 100000,
       hash: "SHA-256",
     },
@@ -43,20 +47,30 @@ const deriveKey = async (password: string) => {
   );
 };
 
+// Encrypt data with AES-GCM
 const encryptData = async (data: string, password: string): Promise<string> => {
   const key = await deriveKey(password);
-  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-  const encodedData = new TextEncoder().encode(data);
+  const iv = window.crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const encoder = new TextEncoder();
+  const encodedData = encoder.encode(data);
 
-  const encrypted = await crypto.subtle.encrypt(
+  const encrypted = await window.crypto.subtle.encrypt(
     { name: ALGORITHM, iv },
     key,
     encodedData,
   );
 
-  return `${Buffer.from(iv).toString("hex")}:${Buffer.from(encrypted).toString("hex")}`;
+  // Convert IV and encrypted data to hex strings and combine them
+  const ivHex = Array.from(iv)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  const encryptedHex = Array.from(new Uint8Array(encrypted))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `${ivHex}:${encryptedHex}`;
 };
 
+// Decrypt data with AES-GCM
 const decryptData = async (
   encryptedData: string,
   password: string,
@@ -66,16 +80,21 @@ const decryptData = async (
     if (!ivHex || !encryptedHex) throw new Error("Invalid encrypted format");
 
     const key = await deriveKey(password);
-    const iv = new Uint8Array(Buffer.from(ivHex, "hex"));
-    const encryptedBuffer = Buffer.from(encryptedHex, "hex");
+    const iv = new Uint8Array(
+      ivHex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)),
+    );
+    const encryptedBuffer = new Uint8Array(
+      encryptedHex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)),
+    );
 
-    const decrypted = await crypto.subtle.decrypt(
+    const decrypted = await window.crypto.subtle.decrypt(
       { name: ALGORITHM, iv },
       key,
       encryptedBuffer,
     );
 
-    return new TextDecoder().decode(decrypted);
+    const decoder = new TextDecoder();
+    return decoder.decode(decrypted);
   } catch (error) {
     console.error("Decryption failed:", error);
     return null;

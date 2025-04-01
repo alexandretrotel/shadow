@@ -16,8 +16,12 @@ import {
   CreateAccountFormSchema,
 } from "./auth-schemas";
 import { SERVER_URL } from "@/lib/server";
+import { encode } from "@stablelib/base64";
+import { useAuth } from "@/store/auth.store";
 
 export const CreateAccountForm = () => {
+  const { setAuth } = useAuth();
+
   const form = useForm<CreateAccountFormSchema>({
     resolver: zodResolver(createAccountFormSchema),
     defaultValues: { username: "", password: "", confirmPassword: "" },
@@ -25,6 +29,8 @@ export const CreateAccountForm = () => {
 
   const onSubmit = async (data: CreateAccountFormSchema) => {
     try {
+      const keyPair = generateKeyPair();
+
       const response = await fetch(`${SERVER_URL}/register`, {
         method: "POST",
         headers: {
@@ -32,7 +38,7 @@ export const CreateAccountForm = () => {
         },
         body: JSON.stringify({
           username: data.username,
-          publicKey: generateKeyPair().publicKey,
+          publicKey: encode(keyPair.publicKey),
         }),
       });
 
@@ -40,9 +46,12 @@ export const CreateAccountForm = () => {
         throw new Error("Failed to create account");
       }
 
+      await setAuth(data.username, keyPair, data.password);
+
       toast.success("Account created successfully");
       form.reset();
-    } catch {
+    } catch (error) {
+      console.error("Error creating account:", error);
       toast.error("Error creating account");
     }
   };
