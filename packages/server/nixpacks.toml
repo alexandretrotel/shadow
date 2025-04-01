@@ -9,8 +9,11 @@ aptPkgs = ["curl", "wget"]
 
 [phases.install]
 dependsOn = ["setup"]
-cmds = ["bun install"]
-cacheDirectories = ["/root/.bun"]
+cmds = ["bun install --frozen-lockfile"]
+
+[phases.build]
+dependsOn = ["install"]
+cmds = ["cd server && bun run build"]
 
 [start]
-cmd = "bun run src/index.ts"
+cmd = "cd server && bun run src/index.ts"
