@@ -4,7 +4,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "bun run src/index.ts"
+    "start": "bun run src/index.ts",
+    "db:push": "drizzle-kit push",
+    "db:pull": "drizzle-kit pull",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -16,12 +21,13 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.41.0",
     "express": "^5.1.0",
     "lodash": "^4.17.21",
     "socket.io": "^4.8.1",
-    "@shadow/common": "workspace:*"
+    "zod": "^3.24.2"
   }
 }

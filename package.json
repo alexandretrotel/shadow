@@ -9,8 +9,7 @@
   "type": "module",
   "workspaces": [
     "server",
-    "client",
-    "common"
+    "client"
   ],
   "dependencies": {
     "react-router-dom": "^7.4.1"

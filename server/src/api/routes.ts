@@ -1,14 +1,11 @@
 import express from "express";
-import { db } from "../../common/db";
+import { db } from "../db";
 import { eq } from "drizzle-orm";
-import { users } from "../../common/db/schema";
-import {
-  privateKeySchema,
-  usernameAndPublicKeySchema,
-} from "../../common/src/schemas";
-import { getPublicKeyFromPrivateKey } from "../../common/src/crypto";
+import { users } from "../db/schema";
 import { decode, encode } from "@stablelib/base64";
 import nacl from "tweetnacl";
+import { getPublicKeyFromPrivateKey } from "../lib/crypto";
+import { privateKeySchema, usernameAndPublicKeySchema } from "@/lib/schemas";
 
 export function setupRoutes(app: express.Express) {
   app.post("/register", async (req, res) => {

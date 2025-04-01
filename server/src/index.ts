@@ -2,8 +2,8 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import { setupRoutes } from "./routes";
-import { setupSockets } from "./sockets";
+import { setupRoutes } from "./api/routes";
+import { setupSockets } from "./api/sockets";
 
 const app = express();
 app.use(
