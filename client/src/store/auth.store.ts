@@ -101,7 +101,7 @@ const decryptData = async (
   }
 };
 
-export const useAuth = create<AuthStore>((set) => ({
+export const useAuth = create<AuthStore>((set, get) => ({
   username: null,
   keyPair: null,
 
@@ -131,15 +131,9 @@ export const useAuth = create<AuthStore>((set) => ({
     set({ username: state.username, keyPair: state.keyPair });
   },
 
-  getKeyPair: async (password: string) => {
-    const encrypted = localStorage.getItem("auth-storage");
-    if (!encrypted) return null;
-
-    const decrypted = await decryptData(encrypted, password);
-    if (!decrypted) return null;
-
-    const state = JSON.parse(decrypted);
-    return state.keyPair as nacl.BoxKeyPair;
+  getKeyPair: () => {
+    const state = get();
+    return state.keyPair;
   },
 
   clearAuth: () => {
