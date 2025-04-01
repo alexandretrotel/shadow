@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { type Socket, io } from "socket.io-client";
 import { SERVER_URL } from "@/lib/server";
+import { useEffect } from "react";
 
 interface SocketStore {
   socket: Socket | null;
@@ -22,7 +23,10 @@ export const useSocket = create<SocketStore>((set) => ({
   },
 }));
 
-export const initializeSocket = () => {
+export const useInitializeSocket = () => {
   const { initialize } = useSocket.getState();
-  initialize();
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 };

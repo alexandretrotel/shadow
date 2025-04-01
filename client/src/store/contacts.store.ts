@@ -6,11 +6,12 @@ interface ContactsStore {
   addContact: (contact: string) => void;
   removeContact: (contact: string) => void;
   clearContacts: () => void;
+  isInContacts: (contact: string) => boolean;
 }
 
 export const useContacts = create<ContactsStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       contacts: [],
 
       addContact: (contact) =>
@@ -22,6 +23,11 @@ export const useContacts = create<ContactsStore>()(
         })),
 
       clearContacts: () => set({ contacts: [] }),
+
+      isInContacts: (contact: string) => {
+        const state = get();
+        return state.contacts.includes(contact);
+      },
     }),
     {
       name: "contacts-storage",

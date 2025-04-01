@@ -5,6 +5,7 @@ import { ContactsList } from "./components/contacts-list";
 import { useContacts } from "@/store/contacts.store";
 import { useAuth } from "@/store/auth.store";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export const Home = () => {
   const { contacts } = useContacts();
@@ -21,8 +22,18 @@ export const Home = () => {
 
   return (
     <Card className="w-full max-w-md border-none shadow-none">
-      <CardHeader>
-        <h2 className="text-2xl font-semibold">Welcome, @{username}</h2>
+      <CardHeader className="flex items-center justify-between gap-4">
+        <h2 className="text-2xl font-semibold">
+          Welcome, <span className="text-primary">{username}</span>
+        </h2>
+
+        <Button
+          onClick={() => navigate("/account")}
+          variant="ghost"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          My Account
+        </Button>
       </CardHeader>
 
       <CardContent className="space-y-8">

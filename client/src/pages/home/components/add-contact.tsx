@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useContacts } from "@/store/contacts.store";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { SERVER_URL } from "@/lib/server";
 
 export const AddContact = () => {
-  const { addContact } = useContacts();
+  const { addContact, isInContacts } = useContacts();
 
   const contactForm = useForm({
     defaultValues: {
@@ -20,9 +22,29 @@ export const AddContact = () => {
     },
   });
 
-  const handleAddContact = (data: { contact: string }) => {
-    addContact(data.contact);
-    contactForm.reset();
+  const handleAddContact = async (data: { contact: string }) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/user/${data.contact}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("User not found");
+      }
+
+      if (isInContacts(data.contact)) {
+        toast.error("Contact already exists");
+        return;
+      }
+
+      addContact(data.contact);
+      contactForm.reset();
+    } catch {
+      toast.error("User not found");
+    }
   };
 
   return (

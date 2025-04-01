@@ -123,7 +123,7 @@ export const useAuth = create<AuthStore>((set) => ({
 
     const decrypted = await decryptData(encrypted, password);
     if (!decrypted) {
-      console.error("Decryption failed");
+      throw new Error("Decryption failed");
       return;
     }
 

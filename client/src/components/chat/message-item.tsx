@@ -127,13 +127,7 @@ export const MessageItem = ({ message, isOwnMessage }: MessageItemProps) => {
               )}
               whileHover={{ boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
             >
-              <div className="flex flex-col gap-2">
-                {!isOwnMessage && (
-                  <span className="text-muted-foreground text-sm font-medium">
-                    {message.sender}
-                  </span>
-                )}
-              </div>
+              <div className="flex flex-col gap-2">{textContent}</div>
             </motion.div>
           )}
 

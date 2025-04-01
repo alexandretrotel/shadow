@@ -19,6 +19,8 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
     null,
   );
 
+  const { clearMessages } = useChat();
+
   useEffect(() => {
     const fetchRecipientPublicKey = async () => {
       const response = await fetch(`${SERVER_URL}/public-key/${recipient}`, {
@@ -47,12 +49,26 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
   return (
     <CardHeader className="border-muted flex-shrink-0 border-b pt-6">
       <div className="flex items-center justify-between">
-        <CardTitle className="text-secondary-foreground text-lg tracking-wide">
-          @{recipient}
-        </CardTitle>
+        <div className="flex items-center gap-4">
+          <CardTitle className="text-secondary-foreground text-lg tracking-wide">
+            {recipient}
+          </CardTitle>
+
+          <motion.span
+            key={recipient}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="bg-muted text-muted-foreground hover:text-foreground rounded border px-2 py-1 font-mono text-xs"
+          >
+            <span className="blur-xs transition-all duration-400 hover:blur-none">
+              {getKeyFingerprint(decode(recipientPublicKey || ""))}
+            </span>
+          </motion.span>
+        </div>
         <motion.div transition={{ duration: 0.2 }} className="flex gap-2">
           <Button
-            onClick={() => useChat.getState().clearMessages(recipient)}
+            onClick={() => clearMessages(recipient)}
             variant="ghost"
             size="sm"
             className="text-muted-foreground"
@@ -70,20 +86,6 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
           </Button>
         </motion.div>
       </div>
-
-      {recipientPublicKey && (
-        <div className="text-muted-foreground mt-1 flex flex-wrap gap-2 text-xs">
-          <motion.span
-            key={recipient}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="bg-muted rounded px-2 py-1"
-          >
-            {recipient} ({getKeyFingerprint(decode(recipientPublicKey || ""))})
-          </motion.span>
-        </div>
-      )}
     </CardHeader>
   );
 };

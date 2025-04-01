@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { ChatContainer } from "@/components/chat/chat-container";
 import { Message } from "@/lib/types";
-import { initializeSocket, useSocket } from "@/store/socket.store";
+import { useInitializeSocket, useSocket } from "@/store/socket.store";
 import { toast } from "sonner";
 import { useChat } from "@/store/chat.store";
-import { redirect, useParams } from "react-router-dom";
+import { redirect, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/store/auth.store";
 
 export const Chat = () => {
@@ -12,15 +12,17 @@ export const Chat = () => {
 
   const [isTyping, setIsTyping] = useState(false);
 
-  initializeSocket();
+  useInitializeSocket();
   const { socket, closeSocket } = useSocket();
   const { username } = useAuth();
-  const { messages, addMessage, clearMessages } = useChat();
+  const { messages, addMessage } = useChat();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!socket) {
-      toast.error("You are not connected to the server");
       return;
+    } else {
+      toast.success("Connected to the server");
     }
 
     if (!recipient) {
@@ -43,19 +45,25 @@ export const Chat = () => {
       return;
     }
 
+    if (!username) {
+      toast.error("You are not authenticated");
+      redirect("/");
+      return;
+    }
+
     if (!recipient) {
       toast.error("Recipient not found");
       return;
     }
 
     const message: Message = {
-      sender: recipient,
+      sender: username,
       content,
       messageId: Date.now().toString(),
       status: "sent",
     };
 
-    socket.emit("message", { recipient: "recipientUsername", message });
+    socket.emit("message", { recipient, message });
 
     addMessage(recipient, message);
   };
@@ -71,7 +79,12 @@ export const Chat = () => {
       return;
     }
 
-    setIsTyping(true);
+    if (!username) {
+      toast.error("You are not authenticated");
+      redirect("/");
+      return;
+    }
+
     socket.emit("typing", { recipient, username });
   };
 
@@ -91,7 +104,7 @@ export const Chat = () => {
       recipient={recipient}
       messages={messages[recipient]}
       onSend={sendMessage}
-      onLeave={() => clearMessages(recipient)}
+      onLeave={() => navigate("/")}
       isTyping={isTyping}
       sendTyping={handleTyping}
       username={username}

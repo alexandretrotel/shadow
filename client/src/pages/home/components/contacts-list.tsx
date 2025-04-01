@@ -14,7 +14,13 @@ export const ContactsList = ({ contacts, startChat }: ContactsListProps) => (
       contacts.map((contact) => (
         <div key={contact} className="flex items-center justify-between py-2">
           <span>{contact}</span>
-          <Button onClick={() => startChat(contact)}>Chat</Button>
+          <Button
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => startChat(contact)}
+          >
+            Chat
+          </Button>
         </div>
       ))
     )}

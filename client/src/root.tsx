@@ -33,6 +33,7 @@ export const Root = () => {
     try {
       await loadAuth(password);
       setIsPasswordModalOpen(false);
+
       toast.success("Authentication loaded successfully");
       navigate("/");
     } catch {
@@ -52,7 +53,7 @@ export const Root = () => {
           open={isPasswordModalOpen}
           onOpenChange={setIsPasswordModalOpen}
         >
-          <DialogContent>
+          <DialogContent className="backdrop-blur">
             <DialogHeader>
               <DialogTitle>Enter Password</DialogTitle>
             </DialogHeader>
