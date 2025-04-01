@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { encode as encodeBase64 } from "@stablelib/base64";
-import { useChatStore } from "@/store/chat-store";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { getKeyPair } from "@/lib/storage";
 import { AccountHeader } from "./components/account-header";
 import { AccountIdentity } from "./components/account-idendity";
 import { KeyDisplay } from "./components/key-display";
@@ -15,25 +13,27 @@ const AccountPage = () => {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [copiedPublic, setCopiedPublic] = useState(false);
   const [copiedPrivate, setCopiedPrivate] = useState(false);
+
   const navigate = useNavigate();
-  const { username } = useChatStore();
-  const keyPair = getKeyPair();
 
   const publicKeyBase64 = encodeBase64(keyPair?.publicKey || new Uint8Array());
   const privateKeyBase64 = encodeBase64(keyPair?.secretKey || new Uint8Array());
 
   useEffect(() => {
     if (!keyPair) return;
+
     const generateQRCode = async () => {
       const QRCode = await import("qrcode");
       const dataUrl = await QRCode.toDataURL(publicKeyBase64);
       setQrCode(dataUrl);
     };
+
     generateQRCode();
   }, [keyPair, publicKeyBase64]);
 
   const handleCopy = (key: string, type: "public" | "private") => {
     navigator.clipboard.writeText(key);
+
     if (type === "public") {
       setCopiedPublic(true);
       toast.success("Public key copied to clipboard!");
@@ -50,6 +50,7 @@ const AccountPage = () => {
       <CardHeader>
         <AccountHeader />
       </CardHeader>
+
       <CardContent className="space-y-6">
         <AccountIdentity username={username} />
         <KeyDisplay

@@ -7,17 +7,16 @@ import { motion } from "framer-motion";
 import VoiceMessage from "./voice-message";
 import { cn } from "@/lib/utils";
 import { featureFlags } from "@/lib/features";
+import { Message } from "@shared/src/types";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
 interface MessageItemProps {
   message: Message;
-  username: string;
+  isOwnMessage: boolean;
 }
 
-export const MessageItem = ({ message, username }: MessageItemProps) => {
-  const isOwnMessage = message.sender === username;
-
+export const MessageItem = ({ message, isOwnMessage }: MessageItemProps) => {
   const isImageFile = (fileName: string) =>
     IMAGE_EXTENSIONS.includes(fileName.split(".").pop()?.toLowerCase() || "");
 

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Message } from "../../../../shared/src/types";
 
 interface ChatRoomProps {
-  username: string;
+  recipient: string;
   messages: Message[];
   onSend: (content: string) => void;
   onLeave: () => void;
@@ -16,7 +16,7 @@ interface ChatRoomProps {
 }
 
 export const ChatContainer = ({
-  username,
+  recipient,
   messages,
   onSend,
   onLeave,
@@ -36,10 +36,10 @@ export const ChatContainer = ({
           "bg-background",
         )}
       >
-        <ChatHeader username={username} onLeave={onLeave} />
+        <ChatHeader username={recipient} onLeave={onLeave} />
         <MessageList
           messages={messages}
-          username={username}
+          recipient={recipient}
           isTyping={isTyping}
         />
         <InputArea onSend={onSend} sendTyping={sendTyping} />

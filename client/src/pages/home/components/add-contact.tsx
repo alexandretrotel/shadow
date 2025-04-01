@@ -8,8 +8,23 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useContacts } from "@/store/contacts.store";
+import { useForm } from "react-hook-form";
 
 export const AddContact = () => {
+  const { addContact } = useContacts();
+
+  const contactForm = useForm({
+    defaultValues: {
+      contact: "",
+    },
+  });
+
+  const handleAddContact = (data: { contact: string }) => {
+    addContact(data.contact);
+    contactForm.reset();
+  };
+
   return (
     <Form {...contactForm}>
       <form
