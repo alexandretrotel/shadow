@@ -13,7 +13,7 @@ cmds = ["bun install"]
 
 [phases.build]
 dependsOn = ["install"]
-cmds = ["cd server && bun run build"]
+cmds = ["bun run build"]
 
 [start]
-cmd = "cd server && bun run src/index.ts"
+cmd = "bun run src/index.ts"

@@ -10,7 +10,7 @@ interface AuthStore {
     password: string,
   ) => Promise<void>;
   loadAuth: (password: string) => Promise<void>;
-  getKeyPair: (password: string) => Promise<nacl.BoxKeyPair | null>;
+  getKeyPair: () => nacl.BoxKeyPair | null;
   clearAuth: () => void;
 }
 
