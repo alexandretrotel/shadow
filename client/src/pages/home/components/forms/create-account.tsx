@@ -15,6 +15,7 @@ import {
   createAccountFormSchema,
   CreateAccountFormSchema,
 } from "./auth-schemas";
+import { SERVER_URL } from "@/lib/server";
 
 export const CreateAccountForm = () => {
   const form = useForm<CreateAccountFormSchema>({
@@ -24,7 +25,7 @@ export const CreateAccountForm = () => {
 
   const onSubmit = async (data: CreateAccountFormSchema) => {
     try {
-      const response = await fetch("/register", {
+      const response = await fetch(`${SERVER_URL}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

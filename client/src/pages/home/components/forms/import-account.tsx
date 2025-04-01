@@ -19,6 +19,7 @@ import {
   ImportFormSchema,
   usernameSchema,
 } from "./auth-schemas";
+import { SERVER_URL } from "@/lib/server";
 
 export const ImportAccountForm = () => {
   const { setAuth } = useAuth();
@@ -31,7 +32,7 @@ export const ImportAccountForm = () => {
 
   const onSubmit = async (data: ImportFormSchema) => {
     try {
-      const response = await fetch("/login", {
+      const response = await fetch(`${SERVER_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
