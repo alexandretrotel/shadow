@@ -5,7 +5,7 @@
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.8.2"
   },
   "private": true,
   "scripts": {
@@ -20,7 +20,8 @@
   "type": "module",
   "workspaces": [
     "client",
-    "server"
+    "server",
+    "shared"
   ],
   "dependencies": {
     "react-router-dom": "^7.4.1"
