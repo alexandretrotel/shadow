@@ -35,6 +35,7 @@ export function setupRoutes(app: express.Express) {
     }
   });
 
+  // TODO: check encoding and decoding logic
   app.post("/login", async (req, res) => {
     const { privateKey } = privateKeySchema.parse(req.body);
     const publicKey = getPublicKeyFromPrivateKey(decodeBase64(privateKey));
