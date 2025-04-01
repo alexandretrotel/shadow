@@ -29,6 +29,10 @@ export class SocketService {
     }
   }
 
+  requestPublicKey(username: string) {
+    this.socket.emit("requestPublicKey", { username });
+  }
+
   setKeyPair(keyPair: nacl.BoxKeyPair | null) {
     this.keyPair = keyPair;
     if (keyPair) {

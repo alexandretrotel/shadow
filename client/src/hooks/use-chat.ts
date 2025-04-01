@@ -21,7 +21,6 @@ export function useChat(): ChatActions {
     removeTypingUser,
     setCurrentRecipient,
     addContact,
-    reset,
   } = useChatStore();
 
   const editMessage = (messageId: string, content: string) => {
@@ -88,17 +87,6 @@ export function useChat(): ChatActions {
       socketService.setKeyPair(keys);
       socketService.register(username, encodeBase64(keys.publicKey));
     }
-
-    const handlePublicKeys = ({
-      username: contactUsername,
-      publicKey,
-    }: {
-      username: string;
-      publicKey: string;
-    }) => {
-      const pubKey = decodeBase64(publicKey);
-      addContact({ username: contactUsername, publicKey: pubKey });
-    };
 
     const handleMessage = (msg: Message) => {
       const encrypted = decodeBase64(msg.content);
@@ -217,6 +205,17 @@ export function useChat(): ChatActions {
       }));
     };
 
+    const handlePublicKeys = ({
+      username: contactUsername,
+      publicKey,
+    }: {
+      username: string;
+      publicKey: string;
+    }) => {
+      const pubKey = decodeBase64(publicKey);
+      addContact({ username: contactUsername, publicKey: pubKey });
+    };
+
     socketService.onPublicKeys(handlePublicKeys);
     socketService.onMessage(handleMessage);
     socketService.onError(handleError);
@@ -224,6 +223,7 @@ export function useChat(): ChatActions {
     socketService.onMessageEdited(handleMessageEdited);
     socketService.onMessageDeleted(handleMessageDeleted);
     socketService.onMessageReaction(handleMessageReaction);
+    socketService.onPublicKeys(handlePublicKeys);
 
     return () => {
       socketService.getSocket().off("publicKeys", handlePublicKeys);
@@ -233,6 +233,7 @@ export function useChat(): ChatActions {
       socketService.getSocket().off("messageEdited", handleMessageEdited);
       socketService.getSocket().off("messageDeleted", handleMessageDeleted);
       socketService.getSocket().off("messageReaction", handleMessageReaction);
+      socketService.getSocket().off("publicKeys", handlePublicKeys);
     };
   }, [
     username,
@@ -245,6 +246,9 @@ export function useChat(): ChatActions {
   ]);
 
   const startChat = (recipient: string) => {
+    if (!contacts.some((c) => c.username === recipient)) {
+      socketService.requestPublicKey(recipient);
+    }
     setCurrentRecipient(recipient);
   };
 
@@ -271,7 +275,7 @@ export function useChat(): ChatActions {
         sender: username,
         content,
         timer,
-        status: "sent",
+        status: "sent" as const,
         messageId,
         type: content.startsWith("[FILE:")
           ? "file"
@@ -288,15 +292,24 @@ export function useChat(): ChatActions {
           }));
         }, timer * 1000);
       }
+
+      socketService
+        .getSocket()
+        .emit("messageStatus", { messageId, status: "sent" });
     } else {
       toast.error("Failed to send message.");
     }
   };
 
   const leaveChat = () => {
-    reset();
-    socketService.setKeyPair(null);
+    useChatStore.setState((state) => ({
+      ...state,
+      messages: [],
+      typingUsers: [],
+      currentRecipient: "",
+    }));
     socketService.disconnect();
+    socketService.getSocket().connect();
   };
 
   const sendTyping = debounce(() => {

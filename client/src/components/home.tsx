@@ -16,6 +16,8 @@ import {
 import { motion } from "motion/react";
 import { useChatStore } from "@/store/chat-store";
 import { useChat } from "@/hooks/use-chat";
+import { socketService } from "@/lib/socket-service";
+import { useNavigate } from "react-router-dom";
 
 const usernameSchema = z.object({
   username: z.string().min(1, "Username is required").max(30),
@@ -24,7 +26,8 @@ const usernameSchema = z.object({
 type UsernameFormData = z.infer<typeof usernameSchema>;
 
 export function Home() {
-  const { username, contacts, setUsername, addContact } = useChatStore();
+  const navigate = useNavigate();
+  const { username, contacts, setUsername } = useChatStore();
   const { startChat } = useChat();
   const [newContact, setNewContact] = useState("");
 
@@ -39,12 +42,12 @@ export function Home() {
 
   const handleStartChat = (contactUsername: string) => {
     startChat(contactUsername);
+    navigate(`/chat/${contactUsername}`);
   };
 
   const handleAddContact = () => {
     if (newContact && !contacts.some((c) => c.username === newContact)) {
-      const publicKey = new Uint8Array(); // TODO: Get the public key of the new contact
-      addContact({ username: newContact, publicKey });
+      socketService.requestPublicKey(newContact);
       setNewContact("");
     }
   };
@@ -92,7 +95,7 @@ export function Home() {
                 >
                   <Button
                     type="submit"
-                    className="bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground w-full"
+                    className="bg-secondary text-secondary-foreground w-full"
                   >
                     Enter the Shadows
                   </Button>
@@ -128,7 +131,7 @@ export function Home() {
             />
             <Button
               onClick={handleAddContact}
-              className="bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground"
+              className="bg-secondary text-secondary-foreground"
             >
               Add
             </Button>
@@ -145,7 +148,7 @@ export function Home() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleStartChat(contact.username)}
-                  className="text-muted-foreground hover:text-accent-foreground"
+                  className="text-muted-foreground"
                 >
                   Chat
                 </Button>

@@ -110,7 +110,7 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
             variant="ghost"
             size="icon"
             onClick={isRecording ? stopRecording : startRecording}
-            className={`text-muted-foreground hover:text-accent-foreground ${isRecording ? "bg-accent/20" : ""}`}
+            className={`text-muted-foreground ${isRecording ? "bg-accent/20" : ""}`}
           >
             {isRecording ? (
               <span className="text-xs">{recordingDuration}s</span>
@@ -125,7 +125,7 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
             variant="ghost"
             size="icon"
             onClick={() => fileInputRef.current?.click()}
-            className="text-muted-foreground hover:text-accent-foreground"
+            className="text-muted-foreground"
           >
             <PaperclipIcon className="size-5" />
           </Button>
@@ -154,7 +154,7 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
         <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
           <Button
             type="submit"
-            className="bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground"
+            className="bg-secondary text-secondary-foreground"
           >
             Send
           </Button>

@@ -54,7 +54,7 @@ const VoiceMessage = ({ content }: VoiceMessageProps) => {
         variant="ghost"
         size="icon"
         onClick={togglePlay}
-        className="text-foreground hover:bg-accent hover:text-accent-foreground"
+        className="text-foreground"
       >
         {isPlaying ? (
           <PauseIcon className="size-5" />

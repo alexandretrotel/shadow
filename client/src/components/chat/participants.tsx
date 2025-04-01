@@ -27,7 +27,7 @@ export const Participants = ({
           onClick={() => useChatStore.getState().clearMessages()}
           variant="ghost"
           size="sm"
-          className="text-muted-foreground hover:text-accent-foreground"
+          className="text-muted-foreground"
         >
           Clear Chat
         </Button>
@@ -36,7 +36,7 @@ export const Participants = ({
           onClick={onLeave}
           variant="ghost"
           size="sm"
-          className="text-muted-foreground hover:text-accent-foreground"
+          className="text-muted-foreground"
         >
           Leave
         </Button>

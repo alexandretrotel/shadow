@@ -85,7 +85,7 @@ export const ChatRoom = memo(function ChatRoom({
             <a
               href={dataUrl}
               download={fileName}
-              className="text-muted-foreground hover:text-accent flex items-center gap-1 text-xs"
+              className="text-muted-foreground flex items-center gap-1 text-xs"
             >
               <DownloadIcon className="size-3" /> Download {fileName}
             </a>
@@ -97,7 +97,7 @@ export const ChatRoom = memo(function ChatRoom({
         <a
           href={dataUrl}
           download={fileName}
-          className="text-accent-foreground hover:text-accent flex items-center gap-1 underline"
+          className="text-accent-foreground flex items-center gap-1 underline"
         >
           📎 {fileName}
         </a>
@@ -118,7 +118,7 @@ export const ChatRoom = memo(function ChatRoom({
             onClick={onLeave}
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-accent-foreground"
+            className="text-muted-foreground"
           >
             Exit
           </Button>
@@ -187,7 +187,7 @@ export const ChatRoom = memo(function ChatRoom({
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              className="text-muted-foreground hover:text-accent-foreground"
+              className="text-muted-foreground"
             >
               <PaperclipIcon className="size-5" />
             </Button>
@@ -208,7 +208,7 @@ export const ChatRoom = memo(function ChatRoom({
             />
             <Button
               type="submit"
-              className="bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground"
+              className="bg-secondary text-secondary-foreground"
             >
               Send
             </Button>

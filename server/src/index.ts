@@ -24,8 +24,8 @@ io.on("connection", (socket) => {
 
   socket.on("register", ({ username, publicKey }) => {
     users.set(username, socket.id);
+    socket.handshake.auth = { username, publicKey };
     console.log(`User ${username} registered with socket ${socket.id}`);
-    // Broadcast public key to all connected users
     socket.broadcast.emit("publicKeys", { username, publicKey });
   });
 
@@ -87,6 +87,24 @@ io.on("connection", (socket) => {
         )?.[0],
         reaction,
       });
+    }
+  });
+
+  socket.on("requestPublicKey", ({ username }) => {
+    const socketId = users.get(username);
+    if (socketId) {
+      const registeredUsers = Array.from(users.entries());
+      const user = registeredUsers.find(([u]) => u === username);
+      if (user) {
+        socket.emit("publicKeys", {
+          username: user[0],
+          publicKey: socket.handshake.auth?.publicKey || "",
+        });
+      } else {
+        socket.emit("error", `Public key for ${username} not found`);
+      }
+    } else {
+      socket.emit("error", `User ${username} is not online`);
     }
   });
 
