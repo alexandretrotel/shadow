@@ -1,12 +1,10 @@
 import express from "express";
 import { db } from "@shared/db";
 import { eq } from "drizzle-orm";
-import { contacts, users } from "@shared/db/schema";
+import { users } from "@shared/db/schema";
 import {
-  addContactSchema,
   privateKeySchema,
   usernameAndPublicKeySchema,
-  usernameSchema,
 } from "@shared/src/schemas";
 import { getPublicKeyFromPrivateKey } from "@shared/src/crypto";
 import {
@@ -56,30 +54,6 @@ export function setupRoutes(app: express.Express) {
       res.status(200).json({ message: "Login successful" });
     } catch (error) {
       res.status(500).json({ error: "Login failed" });
-    }
-  });
-
-  app.get("/contacts", async (req, res) => {
-    const { username } = usernameSchema.parse(req.query);
-
-    const userContacts = await db
-      .select({ contactUsername: contacts.contactUsername })
-      .from(contacts)
-      .where(eq(contacts.username, username))
-      .execute();
-
-    res.json(userContacts.map((c) => c.contactUsername));
-  });
-
-  app.post("/contacts", async (req, res) => {
-    const { username, contactUsername } = addContactSchema.parse(req.body);
-
-    try {
-      await db.insert(contacts).values({ username, contactUsername }).execute();
-
-      res.status(201).json({ message: "Contact added" });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to add contact" });
     }
   });
 }

@@ -15,19 +15,3 @@ export const users = pgTable(
   },
   (users) => [primaryKey({ columns: [users.username, users.publicKey] })]
 );
-
-export const contacts = pgTable(
-  "contacts",
-  {
-    username: text("username")
-      .notNull()
-      .references(() => users.username),
-    contactUsername: text("contact_username")
-      .notNull()
-      .references(() => users.username),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (contacts) => [
-    primaryKey({ columns: [contacts.username, contacts.contactUsername] }),
-  ]
-);
