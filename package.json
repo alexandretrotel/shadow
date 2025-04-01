@@ -19,7 +19,9 @@
   },
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "server",
+    "client",
+    "shared"
   ],
   "dependencies": {
     "react-router-dom": "^7.4.1"
