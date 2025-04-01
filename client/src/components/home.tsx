@@ -134,7 +134,7 @@ export function Home() {
 
   if (!username) {
     return (
-      <Card className="mx-auto mt-10 max-w-md border-none shadow-none">
+      <Card className="w-full max-w-md gap-8 border-none shadow-none">
         <CardHeader>
           <CardTitle className="text-secondary-foreground text-2xl tracking-wide">
             Welcome to Shadow
