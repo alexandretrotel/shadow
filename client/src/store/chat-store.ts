@@ -1,10 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { ChatState, Message, Participant } from "@/types/chat";
-import {
-  decode as decodeBase64,
-  encode as encodeBase64,
-} from "@stablelib/base64";
+import { encode as encodeBase64 } from "@stablelib/base64";
 
 type ChatStore = ChatState & {
   currentRecipient: string;
@@ -84,10 +81,7 @@ export const useChatStore = create<ChatStore>()(
           contacts:
             persistedState.contacts?.map((c) => ({
               username: c.username,
-              publicKey:
-                typeof c.publicKey === "string"
-                  ? new Uint8Array(decodeBase64(c.publicKey))
-                  : c.publicKey,
+              publicKey: c.publicKey,
             })) || [],
         };
       },

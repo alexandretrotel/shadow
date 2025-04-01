@@ -308,8 +308,6 @@ export function useChat(): ChatActions {
       typingUsers: [],
       currentRecipient: "",
     }));
-    socketService.disconnect();
-    socketService.getSocket().connect();
   };
 
   const sendTyping = debounce(() => {

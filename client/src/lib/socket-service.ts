@@ -33,6 +33,19 @@ export class SocketService {
     this.socket.emit("requestPublicKey", { username });
   }
 
+  getPublicKey(username: string) {
+    return new Promise<Uint8Array>((resolve, reject) => {
+      this.socket.once("publicKey", ({ publicKey }) => {
+        if (publicKey) {
+          resolve(decodeBase64(publicKey));
+        } else {
+          reject(new Error("Public key not found"));
+        }
+      });
+      this.socket.emit("getPublicKey", { username });
+    });
+  }
+
   setKeyPair(keyPair: nacl.BoxKeyPair | null) {
     this.keyPair = keyPair;
     if (keyPair) {

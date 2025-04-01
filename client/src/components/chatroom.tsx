@@ -111,9 +111,14 @@ export const ChatRoom = memo(function ChatRoom({
     <Card className="mx-auto flex h-screen w-full flex-col gap-0 border-none py-0 shadow-lg">
       <CardHeader className="border-muted flex-shrink-0 border-b pt-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-secondary-foreground text-lg tracking-wide">
-            Chat with {recipient}
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-secondary-foreground text-lg tracking-wide">
+              Chat with {recipient}
+            </CardTitle>
+            <div className="text-muted-foreground bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs">
+              pubkey
+            </div>
+          </div>
           <Button
             onClick={onLeave}
             variant="ghost"
