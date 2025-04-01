@@ -19,22 +19,20 @@ import { useChat } from "@/hooks/use-chat";
 import { socketService } from "@/lib/socket-service";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import {
-  encode as encodeBase64,
-  decode as decodeBase64,
-} from "@stablelib/base64";
+import { decode as decodeBase64 } from "@stablelib/base64";
 import nacl from "tweetnacl";
-
-const usernameSchema = z.object({
-  username: z.string().min(1, "Username is required").max(30),
-});
+import { storeKeyPair } from "@/lib/storage";
 
 const contactSchema = z.object({
-  contact: z.string().min(1, "Contact is required"),
+  contact: z.string().min(1, "Contact username is required").max(30),
 });
-
-type UsernameFormData = z.infer<typeof usernameSchema>;
 type ContactFormData = z.infer<typeof contactSchema>;
+
+const importSchema = z.object({
+  username: z.string().min(1, "Username is required").max(30),
+  privateKey: z.string().min(1, "Private key is required"),
+});
+type ImportFormData = z.infer<typeof importSchema>;
 
 export function Home() {
   const [onlineStatus, setOnlineStatus] = useState<
@@ -45,16 +43,14 @@ export function Home() {
   const { username, contacts, setUsername, addContact } = useChatStore();
   const { startChat } = useChat();
 
-  const usernameForm = useForm<UsernameFormData & { password: string }>({
-    resolver: zodResolver(
-      usernameSchema.extend({ password: z.string().min(6) }),
-    ),
-    defaultValues: { username: username || "", password: "" },
-  });
-
   const contactForm = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
     defaultValues: { contact: "" },
+  });
+
+  const importForm = useForm<ImportFormData>({
+    resolver: zodResolver(importSchema),
+    defaultValues: { username: "", privateKey: "" },
   });
 
   useEffect(() => {
@@ -74,28 +70,26 @@ export function Home() {
     }
   }, [contacts, username]);
 
-  const handleUsernameSubmit = async (
-    data: UsernameFormData & { password: string },
-  ) => {
-    const { available } = await socketService.checkUsername(data.username);
-    if (!available) {
-      toast.error("Username is already taken. Try another one.");
+  const handleImport = async (data: ImportFormData) => {
+    const { username, privateKey } = data;
+    const { available } = await socketService.checkUsername(username);
+    if (available) {
+      toast.error("Username not registered. Please check your credentials.");
       return;
     }
 
-    const keys = nacl.box.keyPair();
-    const response = await socketService.register(
-      data.username,
-      encodeBase64(keys.publicKey),
-    );
-    if (response.error) {
-      toast.error(response.error);
+    const secretKey = decodeBase64(privateKey);
+    if (secretKey.length !== nacl.box.secretKeyLength) {
+      toast.error("Invalid private key length.");
       return;
     }
-    socketService.setKeyPair(keys, data.password);
-    setUsername(data.username);
-    socketService.connect(data.username);
-    toast.success(`Welcome, ${data.username}! Your account is ready.`);
+
+    const { publicKey } = await socketService.getPublicKey(username);
+    const keyPair = { publicKey: decodeBase64(publicKey), secretKey };
+    storeKeyPair(keyPair);
+    setUsername(username);
+    socketService.connect(username);
+    toast.success(`Welcome back, ${username}!`);
   };
 
   const handleStartChat = (contactUsername: string) => {
@@ -126,17 +120,17 @@ export function Home() {
             Welcome to Shadow
           </CardTitle>
           <p className="text-muted-foreground text-sm">
-            Choose a username to get started
+            Import your account with your private key
           </p>
         </CardHeader>
         <CardContent>
-          <Form {...usernameForm}>
+          <Form {...importForm}>
             <form
-              onSubmit={usernameForm.handleSubmit(handleUsernameSubmit)}
+              onSubmit={importForm.handleSubmit(handleImport)}
               className="space-y-4"
             >
               <FormField
-                control={usernameForm.control}
+                control={importForm.control}
                 name="username"
                 render={({ field }) => (
                   <FormItem>
@@ -152,11 +146,28 @@ export function Home() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={importForm.control}
+                name="privateKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Private Key</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Base64-encoded private key"
+                        {...field}
+                        className="bg-muted text-foreground placeholder-muted-foreground border-none"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button
                 type="submit"
                 className="bg-primary text-primary-foreground w-full"
               >
-                Create Account
+                Import Account
               </Button>
             </form>
           </Form>
@@ -197,23 +208,6 @@ export function Home() {
                       placeholder="e.g., ShadowFriend"
                       {...field}
                       className="bg-muted text-foreground placeholder-muted-foreground border-none"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={usernameForm.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Enter a secure password"
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />

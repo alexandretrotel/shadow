@@ -13,6 +13,15 @@
         "typescript": "^5.8.2",
       },
     },
+    "packages/api": {
+      "name": "@shadow/api",
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "packages/client": {
       "name": "@shadow/client",
       "version": "1.0.0",
@@ -109,6 +118,15 @@
         "typescript": "^5",
       },
     },
+    "packages/db": {
+      "name": "@shadow/db",
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "packages/server": {
       "name": "@shadow/server",
       "dependencies": {
@@ -116,6 +134,7 @@
         "dotenv": "^16.4.7",
         "drizzle-orm": "^0.41.0",
         "express": "^5.1.0",
+        "lodash": "^4.17.21",
         "socket.io": "^4.8.1",
       },
       "devDependencies": {
@@ -595,9 +614,13 @@
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.38.0", "", { "os": "win32", "cpu": "x64" }, "sha512-jjqy3uWlecfB98Psxb5cD6Fny9Fupv9LrDSPTQZUROqjvZmcCqNu4UMl7qqhlUUGpwiAkotj6GYu4SZdcr/nLw=="],
 
+    "@shadow/api": ["@shadow/api@workspace:packages/api"],
+
     "@shadow/client": ["@shadow/client@workspace:packages/client"],
 
     "@shadow/common": ["@shadow/common@workspace:packages/common"],
+
+    "@shadow/db": ["@shadow/db@workspace:packages/db"],
 
     "@shadow/server": ["@shadow/server@workspace:packages/server"],
 

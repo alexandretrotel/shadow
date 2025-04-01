@@ -18,6 +18,8 @@ type ChatStore = ChatState & {
   serverNonce: string;
   setServerNonce: (nonce: string) => void;
   reset: () => void;
+  seenMessageIds: Set<string>;
+  addSeenMessageId: (id: string) => void;
   initialize: () => void;
 };
 
@@ -30,6 +32,7 @@ export const useChatStore = create<ChatStore>()(
       currentRecipient: "",
       contacts: [],
       serverNonce: "",
+      seenMessageIds: new Set<string>(),
       setUsername: (username) => set((state) => ({ ...state, username })),
       setCurrentRecipient: (recipient) =>
         set((state) => ({ ...state, currentRecipient: recipient })),
@@ -59,6 +62,11 @@ export const useChatStore = create<ChatStore>()(
         })),
       setServerNonce: (nonce) =>
         set((state) => ({ ...state, serverNonce: nonce })),
+      addSeenMessageId: (id) =>
+        set((state) => ({
+          ...state,
+          seenMessageIds: new Set([...state.seenMessageIds, id]),
+        })),
       reset: () =>
         set({
           username: "",
@@ -66,6 +74,7 @@ export const useChatStore = create<ChatStore>()(
           typingUsers: [],
           currentRecipient: "",
           contacts: [],
+          seenMessageIds: new Set<string>(),
         }),
       initialize: () => {
         fetch("/nonce")
@@ -82,18 +91,15 @@ export const useChatStore = create<ChatStore>()(
     {
       name: "chat-store",
       partialize: (state) => ({
-        username: state.username,
         contacts: state.contacts.map((c) => ({
           username: c.username,
           publicKey: encodeBase64(c.publicKey),
         })),
-        serverNonce: state.serverNonce,
       }),
       merge: (persisted, current) => {
         const persistedState = persisted as Partial<ChatStore>;
         return {
           ...current,
-          ...persistedState,
           contacts:
             persistedState.contacts?.map((c) => ({
               username: c.username,

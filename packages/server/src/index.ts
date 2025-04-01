@@ -1,7 +1,7 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { db } from "@shared/db";
+import { db } from "@shadow/db";
 import { users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import nacl from "tweetnacl";
@@ -15,6 +15,7 @@ import {
   usernameSchema,
   userSchema,
 } from "@shadow/shared/schemas";
+import { throttle } from "lodash";
 
 const app = express();
 
@@ -161,18 +162,17 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("typing", (data) => {
-    const parsed = typingSchema.safeParse(data);
-    if (!parsed.success) {
-      socket.emit("error", "Invalid typing data");
-      return;
-    }
-    const { recipient, username } = parsed.data;
-
-    const recipientSocketId = activeUsers.get(recipient);
-    if (recipientSocketId)
-      socket.to(recipientSocketId).emit("typing", { username });
-  });
+  socket.on(
+    "typing",
+    throttle((data) => {
+      const parsed = typingSchema.safeParse(data);
+      if (!parsed.success) return socket.emit("error", "Invalid typing data");
+      const { recipient, username } = parsed.data;
+      const recipientSocketId = activeUsers.get(recipient);
+      if (recipientSocketId)
+        socket.to(recipientSocketId).emit("typing", { username });
+    }, 1000)
+  );
 
   socket.on("messageRead", ({ messageId }: { messageId: string }) => {
     const sender = Array.from(activeUsers.entries()).find(

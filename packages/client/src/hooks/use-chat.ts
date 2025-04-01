@@ -10,6 +10,7 @@ import { debounce } from "lodash";
 import { useChatStore } from "@/store/chat-store";
 import { useShallow } from "zustand/react/shallow";
 import { toast } from "sonner";
+import { getKeyPair } from "@/lib/storage";
 
 export function useChat(): ChatActions {
   const {
@@ -24,13 +25,17 @@ export function useChat(): ChatActions {
 
   useEffect(() => {
     const handleMessage = (msg: Message) => {
+      const { seenMessageIds, addSeenMessageId } = useChatStore.getState();
+      if (seenMessageIds.has(msg.messageId)) return;
+      addSeenMessageId(msg.messageId);
+
       const encrypted = decodeBase64(msg.content);
       const nonce = encrypted.slice(0, nacl.box.nonceLength);
       const ciphertext = encrypted.slice(nacl.box.nonceLength);
       const senderPubKey = contacts.find(
         (c) => c.username === msg.sender,
       )?.publicKey;
-      const keyPair = socketService.getKeyPair();
+      const keyPair = getKeyPair();
 
       if (senderPubKey && keyPair) {
         const decrypted = nacl.box.open(
@@ -122,7 +127,7 @@ export function useChat(): ChatActions {
   };
 
   const sendMessage = (content: string, timer?: number) => {
-    if (!socketService.getKeyPair() || !currentRecipient) {
+    if (!getKeyPair() || !currentRecipient) {
       toast.error("Cannot send message: Encryption keys or recipient not set.");
       return;
     }
@@ -136,7 +141,6 @@ export function useChat(): ChatActions {
     const messageId = socketService.sendMessage(
       currentRecipient,
       content,
-      recipientPublicKey,
       timer,
     );
     if (messageId) {
