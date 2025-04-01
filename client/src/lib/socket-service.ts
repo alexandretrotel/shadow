@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import nacl from "tweetnacl";
+import nacl, { box, randomBytes } from "tweetnacl";
 import {
   encode as encodeBase64,
   decode as decodeBase64,
@@ -42,6 +42,47 @@ export class SocketService {
     return response.json();
   }
 
+  async setKeyPairWithPassword(keyPair: nacl.BoxKeyPair, password: string) {
+    const nonce = randomBytes(box.nonceLength);
+    const encryptedSecretKey = box(
+      keyPair.secretKey,
+      nonce,
+      nacl.hash(new TextEncoder().encode(password)).slice(0, 32),
+      keyPair.secretKey,
+    );
+
+    localStorage.setItem(
+      "chatKeyPair",
+      JSON.stringify({
+        publicKey: encodeBase64(keyPair.publicKey),
+        encryptedSecretKey: encodeBase64(encryptedSecretKey),
+        nonce: encodeBase64(nonce),
+      }),
+    );
+    this.keyPair = keyPair;
+  }
+
+  restoreKeyPairWithPassword(password: string) {
+    const storedKeyPair = localStorage.getItem("chatKeyPair");
+    if (!storedKeyPair) return false;
+
+    const { publicKey, encryptedSecretKey, nonce } = JSON.parse(storedKeyPair);
+    const decrypted = box.open(
+      decodeBase64(encryptedSecretKey),
+      decodeBase64(nonce),
+      nacl.hash(new TextEncoder().encode(password)).slice(0, 32),
+      decodeBase64(publicKey),
+    );
+
+    if (!decrypted) return false;
+
+    this.keyPair = {
+      publicKey: decodeBase64(publicKey),
+      secretKey: decrypted,
+    };
+    return true;
+  }
+
   async checkUsername(username: string) {
     const response = await fetch(`${SERVER_URL}/username/${username}`);
     return response.json();
@@ -53,9 +94,15 @@ export class SocketService {
     return response.json();
   }
 
-  setKeyPair(keyPair: nacl.BoxKeyPair | null) {
-    this.keyPair = keyPair;
-    if (keyPair) {
+  setKeyPair(keyPair: nacl.BoxKeyPair | null, password?: string) {
+    if (!keyPair) {
+      this.keyPair = null;
+      localStorage.removeItem("chatKeyPair");
+      return;
+    }
+    if (password) {
+      this.setKeyPairWithPassword(keyPair, password);
+    } else {
       localStorage.setItem(
         "chatKeyPair",
         JSON.stringify({
@@ -63,6 +110,7 @@ export class SocketService {
           secretKey: encodeBase64(keyPair.secretKey),
         }),
       );
+      this.keyPair = keyPair;
     }
   }
 

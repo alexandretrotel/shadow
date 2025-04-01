@@ -40,13 +40,16 @@ export function Home() {
   const [onlineStatus, setOnlineStatus] = useState<
     { username: string; online: boolean }[]
   >([]);
+
   const navigate = useNavigate();
   const { username, contacts, setUsername, addContact } = useChatStore();
   const { startChat } = useChat();
 
-  const usernameForm = useForm<UsernameFormData>({
-    resolver: zodResolver(usernameSchema),
-    defaultValues: { username: username || "" },
+  const usernameForm = useForm<UsernameFormData & { password: string }>({
+    resolver: zodResolver(
+      usernameSchema.extend({ password: z.string().min(6) }),
+    ),
+    defaultValues: { username: username || "", password: "" },
   });
 
   const contactForm = useForm<ContactFormData>({
@@ -71,12 +74,15 @@ export function Home() {
     }
   }, [contacts, username]);
 
-  const handleUsernameSubmit = async (data: UsernameFormData) => {
+  const handleUsernameSubmit = async (
+    data: UsernameFormData & { password: string },
+  ) => {
     const { available } = await socketService.checkUsername(data.username);
     if (!available) {
       toast.error("Username is already taken. Try another one.");
       return;
     }
+
     const keys = nacl.box.keyPair();
     const response = await socketService.register(
       data.username,
@@ -86,7 +92,7 @@ export function Home() {
       toast.error(response.error);
       return;
     }
-    socketService.setKeyPair(keys);
+    socketService.setKeyPair(keys, data.password);
     setUsername(data.username);
     socketService.connect(data.username);
     toast.success(`Welcome, ${data.username}! Your account is ready.`);
@@ -191,6 +197,23 @@ export function Home() {
                       placeholder="e.g., ShadowFriend"
                       {...field}
                       className="bg-muted text-foreground placeholder-muted-foreground border-none"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={usernameForm.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Account Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Enter a secure password"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
