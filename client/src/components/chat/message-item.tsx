@@ -1,7 +1,4 @@
-import {
-  encode as encodeBase64,
-  decode as decodeBase64,
-} from "@stablelib/base64";
+import { encode, decode } from "@stablelib/base64";
 import { DownloadIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import VoiceMessage from "./voice-message";
@@ -24,8 +21,8 @@ export const MessageItem = ({ message, isOwnMessage }: MessageItemProps) => {
     if (message.content.startsWith("[FILE:")) {
       const [prefix, content] = message.content.split("]");
       const fileName = prefix.slice(6);
-      const fileData = decodeBase64(content);
-      const base64Data = encodeBase64(fileData);
+      const fileData = decode(content);
+      const base64Data = encode(fileData);
       const dataUrl = `data:application/octet-stream;base64,${base64Data}`;
 
       if (isImageFile(fileName)) {
@@ -73,8 +70,8 @@ export const MessageItem = ({ message, isOwnMessage }: MessageItemProps) => {
     if (message.content.startsWith("[FILE:")) {
       const [prefix, content] = message.content.split("]");
       const fileName = prefix.slice(6);
-      const fileData = decodeBase64(content);
-      const base64Data = encodeBase64(fileData);
+      const fileData = decode(content);
+      const base64Data = encode(fileData);
       const dataUrl = `data:application/octet-stream;base64,${base64Data}`;
 
       if (!isImageFile(fileName)) {

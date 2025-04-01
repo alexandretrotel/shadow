@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { encode as encodeBase64 } from "@stablelib/base64";
+import { encode } from "@stablelib/base64";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -16,8 +16,8 @@ const AccountPage = () => {
 
   const navigate = useNavigate();
 
-  const publicKeyBase64 = encodeBase64(keyPair?.publicKey || new Uint8Array());
-  const privateKeyBase64 = encodeBase64(keyPair?.secretKey || new Uint8Array());
+  const publicKeyBase64 = encode(keyPair?.publicKey || new Uint8Array());
+  const privateKeyBase64 = encode(keyPair?.secretKey || new Uint8Array());
 
   useEffect(() => {
     if (!keyPair) return;

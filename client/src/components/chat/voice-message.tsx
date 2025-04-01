@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { decode as decodeBase64 } from "@stablelib/base64";
+import { decode } from "@stablelib/base64";
 import { PlayIcon, PauseIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -15,7 +15,7 @@ const VoiceMessage = ({ content }: VoiceMessageProps) => {
 
   useEffect(() => {
     const [, data] = content.split("]");
-    const audioData = decodeBase64(data);
+    const audioData = decode(data);
     const blob = new Blob([audioData], { type: "audio/webm" });
     const url = URL.createObjectURL(blob);
     audioRef.current = new Audio(url);

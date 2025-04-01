@@ -1,8 +1,5 @@
 import nacl from "tweetnacl";
-import {
-  encode as encodeBase64,
-  decode as decodeBase64,
-} from "@stablelib/base64";
+import { encode, decode } from "@stablelib/base64";
 
 /**
  * Generates a new public-private key pair for encryption.
@@ -32,7 +29,7 @@ export const encryptMessage = (
   const fullMessage = new Uint8Array(nonce.length + encrypted.length);
   fullMessage.set(nonce);
   fullMessage.set(encrypted, nonce.length);
-  return encodeBase64(fullMessage);
+  return encode(fullMessage);
 };
 
 /**
@@ -47,7 +44,7 @@ export const decryptMessage = (
   senderPublicKey: Uint8Array,
   secretKey: Uint8Array
 ): string => {
-  const encrypted = decodeBase64(encryptedContent);
+  const encrypted = decode(encryptedContent);
   const nonce = encrypted.slice(0, nacl.box.nonceLength);
   const ciphertext = encrypted.slice(nacl.box.nonceLength);
   const decrypted = nacl.box.open(
@@ -66,7 +63,7 @@ export const decryptMessage = (
  */
 export const getKeyFingerprint = (key: Uint8Array): string => {
   const hash = nacl.hash(key);
-  return encodeBase64(hash.slice(0, 8));
+  return encode(hash.slice(0, 8));
 };
 
 /**

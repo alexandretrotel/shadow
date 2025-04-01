@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { encode as encodeBase64 } from "@stablelib/base64";
+import { encode } from "@stablelib/base64";
 import { PaperclipIcon, XIcon, MicIcon } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -44,7 +44,7 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
         type: "audio/webm",
       });
       const arrayBuffer = await audioBlob.arrayBuffer();
-      const content = `[VOICE:${Date.now()}.webm]${encodeBase64(new Uint8Array(arrayBuffer))}`;
+      const content = `[VOICE:${Date.now()}.webm]${encode(new Uint8Array(arrayBuffer))}`;
       onSend(content);
       stream.getTracks().forEach((track) => track.stop());
       setRecordingDuration(0);
@@ -65,7 +65,7 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
 
     if (file) {
       const arrayBuffer = await file.arrayBuffer();
-      const content = `[FILE:${file.name}]${encodeBase64(
+      const content = `[FILE:${file.name}]${encode(
         new Uint8Array(arrayBuffer),
       )}`;
       onSend(content);

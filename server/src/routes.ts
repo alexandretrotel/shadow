@@ -7,10 +7,7 @@ import {
   usernameAndPublicKeySchema,
 } from "@shared/src/schemas";
 import { getPublicKeyFromPrivateKey } from "@shared/src/crypto";
-import {
-  decode as decodeBase64,
-  encode as encodeBase64,
-} from "@stablelib/base64";
+import { decode, encode } from "@stablelib/base64";
 import nacl from "tweetnacl";
 
 export function setupRoutes(app: express.Express) {
@@ -40,15 +37,15 @@ export function setupRoutes(app: express.Express) {
 
   app.post("/login", async (req, res) => {
     const { privateKey } = privateKeySchema.parse(req.body);
-    const publicKey = getPublicKeyFromPrivateKey(decodeBase64(privateKey));
-    const publicKeyBase64 = encodeBase64(publicKey);
+    const publicKey = getPublicKeyFromPrivateKey(decode(privateKey));
+    const encodedPublicKey = encode(publicKey);
 
     try {
       // Check if the user exists
       const user = await db
         .select()
         .from(users)
-        .where(eq(users.publicKey, publicKeyBase64))
+        .where(eq(users.publicKey, encodedPublicKey))
         .execute();
 
       if (user.length === 0) {
@@ -56,7 +53,7 @@ export function setupRoutes(app: express.Express) {
       }
 
       // Return username and a simple session token
-      const sessionToken = encodeBase64(nacl.randomBytes(16)); // Temporary token
+      const sessionToken = encode(nacl.randomBytes(16)); // Temporary token
 
       res.status(200).json({
         message: "Login successful",
