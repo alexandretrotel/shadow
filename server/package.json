@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun build src/index.ts --outdir=dist --format=cjs",
+    "build": "bun build src/index.ts --outdir=dist --target=node",
     "start": "bun run src/index.ts",
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",
