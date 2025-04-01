@@ -14,26 +14,40 @@ export const Account = () => {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [copiedPublic, setCopiedPublic] = useState(false);
   const [copiedPrivate, setCopiedPrivate] = useState(false);
+  const [publicKey, setPublicKey] = useState<string | null>(null);
+  const [privateKey, setPrivateKey] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const { username, keyPair } = useAuth();
 
-  const publicKey = keyPair ? encode(keyPair.publicKey) : null;
-  const privateKey = keyPair ? encode(keyPair.secretKey) : null;
-
-  console.log("keyPair", encode(keyPair?.publicKey ?? Uint8Array.from([])));
-
   useEffect(() => {
-    const handleQRCode = async (publicKey: string) => {
-      const QRCode = await import("qrcode");
-      const dataUrl = await QRCode.toDataURL(publicKey);
-      setQrCode(dataUrl);
-    };
+    if (keyPair) {
+      console.log(
+        "publicKey instanceof Uint8Array:",
+        keyPair.publicKey instanceof Uint8Array,
+      );
+      console.log(
+        "secretKey instanceof Uint8Array:",
+        keyPair.secretKey instanceof Uint8Array,
+      );
 
-    if (publicKey) {
-      handleQRCode(publicKey);
+      const encodedPublicKey = encode(keyPair.publicKey || new Uint8Array());
+      const encodedPrivateKey = encode(keyPair.secretKey || new Uint8Array());
+
+      setPublicKey(encodedPublicKey);
+      setPrivateKey(encodedPrivateKey);
+
+      const generateQR = async () => {
+        const QRCode = await import("qrcode");
+        const dataUrl = await QRCode.toDataURL(encodedPublicKey);
+        setQrCode(dataUrl);
+      };
+
+      generateQR().catch(() => {
+        toast.error("Failed to generate QR code.");
+      });
     }
-  }, [publicKey, navigate]);
+  }, [keyPair]);
 
   const handleCopy = (key: string, type: "public" | "private") => {
     navigator.clipboard.writeText(key);
@@ -56,7 +70,7 @@ export const Account = () => {
   }
 
   return (
-    <Card className="w-full max-w-md border-none shadow-none">
+    <Card className="w-full max-w-lg border-none shadow-none">
       <CardHeader>
         <AccountHeader />
       </CardHeader>

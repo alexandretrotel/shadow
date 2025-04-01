@@ -10,19 +10,19 @@ interface AuthStore {
     password: string,
   ) => Promise<void>;
   loadAuth: (password: string) => Promise<void>;
+  getKeyPair: () => nacl.BoxKeyPair | null;
   clearAuth: () => void;
 }
 
 // AES-GCM configuration
 const ALGORITHM = "AES-GCM";
-const IV_LENGTH = 12; // 96-bit IV for AES-GCM
+const IV_LENGTH = 12;
 
 // Derive an encryption key from the password using PBKDF2
 const deriveKey = async (password: string): Promise<CryptoKey> => {
   const encoder = new TextEncoder();
   const passwordBuffer = encoder.encode(password);
 
-  // Import the password as a key for PBKDF2
   const keyMaterial = await window.crypto.subtle.importKey(
     "raw",
     passwordBuffer,
@@ -31,11 +31,10 @@ const deriveKey = async (password: string): Promise<CryptoKey> => {
     ["deriveKey"],
   );
 
-  // Derive a 256-bit AES-GCM key
   return window.crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt: encoder.encode("shadow-salt"), // Consistent salt; consider per-user salts in production
+      salt: encoder.encode("shadow-salt"),
       iterations: 100000,
       hash: "SHA-256",
     },
@@ -59,7 +58,6 @@ const encryptData = async (data: string, password: string): Promise<string> => {
     encodedData,
   );
 
-  // Convert IV and encrypted data to hex strings and combine them
   const ivHex = Array.from(iv)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
@@ -100,7 +98,14 @@ const decryptData = async (
   }
 };
 
-export const useAuth = create<AuthStore>((set) => ({
+// Convert plain object back to Uint8Array
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const toUint8Array = (obj: any): Uint8Array => {
+  const values = Object.values(obj).map((v) => Number(v));
+  return new Uint8Array(values);
+};
+
+export const useAuth = create<AuthStore>((set, get) => ({
   username: null,
   keyPair: null,
 
@@ -123,11 +128,21 @@ export const useAuth = create<AuthStore>((set) => ({
     const decrypted = await decryptData(encrypted, password);
     if (!decrypted) {
       throw new Error("Decryption failed");
-      return;
     }
 
     const state = JSON.parse(decrypted);
-    set({ username: state.username, keyPair: state.keyPair });
+
+    // Reconstruct Uint8Array from plain objects
+    const reconstructedKeyPair = {
+      publicKey: toUint8Array(state.keyPair.publicKey),
+      secretKey: toUint8Array(state.keyPair.secretKey),
+    };
+    set({ username: state.username, keyPair: reconstructedKeyPair });
+  },
+
+  getKeyPair: () => {
+    const state = get();
+    return state.keyPair;
   },
 
   clearAuth: () => {
