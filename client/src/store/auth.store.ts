@@ -10,7 +10,6 @@ interface AuthStore {
     password: string,
   ) => Promise<void>;
   loadAuth: (password: string) => Promise<void>;
-  getKeyPair: () => nacl.BoxKeyPair | null;
   clearAuth: () => void;
 }
 
@@ -101,7 +100,7 @@ const decryptData = async (
   }
 };
 
-export const useAuth = create<AuthStore>((set, get) => ({
+export const useAuth = create<AuthStore>((set) => ({
   username: null,
   keyPair: null,
 
@@ -129,11 +128,6 @@ export const useAuth = create<AuthStore>((set, get) => ({
 
     const state = JSON.parse(decrypted);
     set({ username: state.username, keyPair: state.keyPair });
-  },
-
-  getKeyPair: () => {
-    const state = get();
-    return state.keyPair;
   },
 
   clearAuth: () => {

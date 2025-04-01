@@ -27,7 +27,7 @@ export const Account = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(true);
 
   const navigate = useNavigate();
-  const { username, getKeyPair } = useAuth();
+  const { username, keyPair } = useAuth();
 
   const handlePasswordSubmit = async () => {
     if (!password) {
@@ -36,8 +36,6 @@ export const Account = () => {
     }
 
     try {
-      const keyPair = await getKeyPair(password);
-
       if (!keyPair) {
         toast.error("Failed to retrieve key pair. Please log in again.");
         navigate("/");
