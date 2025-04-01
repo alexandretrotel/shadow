@@ -2,12 +2,12 @@ import "./index.css";
 
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Home } from "./pages/home.tsx";
+import { Home } from "./pages/home/page.tsx";
 import { Toaster } from "@/components/ui/sonner.tsx";
-import Account from "./pages/account.tsx";
-import { ThemeProvider } from "./components/theme-provider.tsx";
+import Account from "./pages/account/page.tsx";
+import { ThemeProvider } from "./providers/theme-provider.tsx";
 import { motion } from "motion/react";
-import { Chat } from "./pages/chat.tsx";
+import { Chat } from "./pages/chat/page.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
