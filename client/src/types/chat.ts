@@ -1,5 +1,3 @@
-import { RoomFormData } from "@/lib/schemas";
-
 export interface Message {
   sender: string;
   content: string;
@@ -16,22 +14,20 @@ export interface Participant {
 }
 
 export interface ChatState {
-  roomName: string;
   username: string;
   messages: Message[];
-  participants: Participant[];
   typingUsers: string[];
 }
 
 export interface ChatActions {
-  joinRoom: (data: RoomFormData) => void;
   sendMessage: (content: string, timer?: number) => void;
-  leaveRoom: () => void;
   sendTyping: () => void;
   getKeyFingerprint: (key: Uint8Array) => string;
   editMessage: (messageId: string, content: string) => void;
   deleteMessage: (messageId: string) => void;
   reactToMessage: (messageId: string, reaction: string) => void;
+  startChat: (recipient: string) => void;
+  leaveChat: () => void;
 }
 
 export interface ChatRoomProps {

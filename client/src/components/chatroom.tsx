@@ -12,23 +12,16 @@ interface Message {
   sender: string;
   content: string;
   timer?: number;
-  status?: "sent" | "delivered" | "failed";
+  status?: "sent" | "delivered" | "failed" | "read";
   messageId: string;
 }
 
-interface Participant {
-  username: string;
-  publicKey: Uint8Array;
-}
-
 interface ChatRoomProps {
-  roomName: string;
   username: string;
+  recipient: string;
   messages: Message[];
-  participants: Participant[];
   onSend: (content: string, timer?: number) => void;
   onLeave: () => void;
-  getKeyFingerprint: (key: Uint8Array) => string;
   typingUsers: string[];
   sendTyping: () => void;
 }
@@ -36,13 +29,11 @@ interface ChatRoomProps {
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
 export const ChatRoom = memo(function ChatRoom({
-  roomName,
   username,
+  recipient,
   messages,
-  participants,
   onSend,
   onLeave,
-  getKeyFingerprint,
   typingUsers,
   sendTyping,
 }: ChatRoomProps) {
@@ -61,9 +52,7 @@ export const ChatRoom = memo(function ChatRoom({
 
     if (file) {
       const arrayBuffer = await file.arrayBuffer();
-      const content = `[FILE:${file.name}]${encodeBase64(
-        new Uint8Array(arrayBuffer),
-      )}`;
+      const content = `[FILE:${file.name}]${encodeBase64(new Uint8Array(arrayBuffer))}`;
       onSend(content);
       setFile(null);
     } else if (input) {
@@ -89,9 +78,7 @@ export const ChatRoom = memo(function ChatRoom({
         return (
           <div className="flex flex-col gap-1">
             <img
-              src={`data:image/${fileName
-                .split(".")
-                .pop()};base64,${base64Data}`}
+              src={`data:image/${fileName.split(".").pop()};base64,${base64Data}`}
               alt={fileName}
               className="max-w-[300px] rounded-md"
             />
@@ -121,11 +108,11 @@ export const ChatRoom = memo(function ChatRoom({
   };
 
   return (
-    <Card className="mx-auto flex h-[85vh] w-full max-w-3xl flex-col gap-0 border-none py-0 shadow-lg">
+    <Card className="mx-auto flex h-screen w-full flex-col gap-0 border-none py-0 shadow-lg">
       <CardHeader className="border-muted flex-shrink-0 border-b pt-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-secondary-foreground text-lg tracking-wide">
-            Room: {roomName}
+            Chat with {recipient}
           </CardTitle>
           <Button
             onClick={onLeave}
@@ -133,18 +120,9 @@ export const ChatRoom = memo(function ChatRoom({
             size="sm"
             className="text-muted-foreground hover:text-accent-foreground"
           >
-            Leave
+            Exit
           </Button>
         </div>
-        {participants.length > 0 && (
-          <div className="text-muted-foreground mt-1 flex flex-wrap gap-2 text-xs">
-            {participants.map((p) => (
-              <span key={p.username} className="bg-muted rounded px-2 py-1">
-                {p.username} ({getKeyFingerprint(p.publicKey)})
-              </span>
-            ))}
-          </div>
-        )}
       </CardHeader>
       <CardContent className="flex flex-grow flex-col p-0">
         <div className="bg-muted flex-grow overflow-y-auto p-4">

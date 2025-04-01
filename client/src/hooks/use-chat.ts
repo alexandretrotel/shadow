@@ -10,37 +10,44 @@ import { debounce } from "lodash";
 import { useChatStore } from "@/store/chat-store";
 import { useShallow } from "zustand/react/shallow";
 import { toast } from "sonner";
-import { RoomFormData } from "@/lib/schemas";
 
 export function useChat(): ChatActions {
   const {
-    roomName,
     username,
+    currentRecipient,
+    contacts,
     addMessage,
     addTypingUser,
     removeTypingUser,
-    setRoomName,
-    setUsername,
+    setCurrentRecipient,
+    addContact,
     reset,
   } = useChatStore();
 
   const editMessage = (messageId: string, content: string) => {
-    socketService.editMessage(
-      roomName,
-      messageId,
-      content,
-      useChatStore.getState().participants,
-    );
-    useChatStore.setState((state) => ({
-      ...state,
-      messages: state.messages.map((msg) =>
-        msg.messageId === messageId ? { ...msg, content, status: "sent" } : msg,
-      ),
-    }));
+    const recipientPublicKey = contacts.find(
+      (c) => c.username === currentRecipient,
+    )?.publicKey;
+    if (recipientPublicKey) {
+      socketService.editMessage(
+        currentRecipient,
+        messageId,
+        content,
+        recipientPublicKey,
+      );
+      useChatStore.setState((state) => ({
+        ...state,
+        messages: state.messages.map((msg) =>
+          msg.messageId === messageId
+            ? { ...msg, content, status: "sent" }
+            : msg,
+        ),
+      }));
+    }
   };
 
   const deleteMessage = (messageId: string) => {
-    socketService.deleteMessage(roomName, messageId);
+    socketService.deleteMessage(currentRecipient, messageId);
     useChatStore.setState((state) => ({
       ...state,
       messages: state.messages.filter((msg) => msg.messageId !== messageId),
@@ -54,13 +61,11 @@ export function useChat(): ChatActions {
     const userReaction = currentMessage?.reactions?.find(
       (r) => r.sender === username && r.reaction === reaction,
     );
-
     if (userReaction) {
       toast.info("You’ve already reacted with this emoji.");
       return;
     }
-
-    socketService.reactToMessage(roomName, messageId, reaction);
+    socketService.reactToMessage(currentRecipient, messageId, reaction);
     useChatStore.setState((state) => ({
       ...state,
       messages: state.messages.map((msg) =>
@@ -78,45 +83,30 @@ export function useChat(): ChatActions {
   };
 
   useEffect(() => {
-    if (roomName && username && !socketService.getKeyPair()) {
+    if (username && !socketService.getKeyPair()) {
       const keys = nacl.box.keyPair();
       socketService.setKeyPair(keys);
-      socketService.joinRoom(
-        roomName,
-        "storedPassword",
-        username,
-        encodeBase64(keys.publicKey),
-      );
+      socketService.register(username, encodeBase64(keys.publicKey));
     }
 
     const handlePublicKeys = ({
-      username,
+      username: contactUsername,
       publicKey,
     }: {
       username: string;
       publicKey: string;
     }) => {
       const pubKey = decodeBase64(publicKey);
-      useChatStore.setState((state) => {
-        const alreadyExists = state.participants.some(
-          (p) => p.username === username,
-        );
-        return {
-          ...state,
-          participants: alreadyExists
-            ? state.participants
-            : [...state.participants, { username, publicKey: pubKey }],
-        };
-      });
+      addContact({ username: contactUsername, publicKey: pubKey });
     };
 
     const handleMessage = (msg: Message) => {
       const encrypted = decodeBase64(msg.content);
       const nonce = encrypted.slice(0, nacl.box.nonceLength);
       const ciphertext = encrypted.slice(nacl.box.nonceLength);
-      const senderPubKey = useChatStore
-        .getState()
-        .participants.find((p) => p.username === msg.sender)?.publicKey;
+      const senderPubKey = contacts.find(
+        (c) => c.username === msg.sender,
+      )?.publicKey;
       const keyPair = socketService.getKeyPair();
 
       if (senderPubKey && keyPair) {
@@ -163,21 +153,6 @@ export function useChat(): ChatActions {
       setTimeout(() => removeTypingUser(username), 2000);
     };
 
-    const handleMessageStatus = ({
-      messageId,
-      status,
-    }: {
-      messageId: string;
-      status: "read";
-    }) => {
-      useChatStore.setState((state) => ({
-        ...state,
-        messages: state.messages.map((msg) =>
-          msg.messageId === messageId ? { ...msg, status } : msg,
-        ),
-      }));
-    };
-
     const handleMessageEdited = ({
       messageId,
       encryptedContent,
@@ -188,9 +163,9 @@ export function useChat(): ChatActions {
       const encrypted = decodeBase64(encryptedContent);
       const nonce = encrypted.slice(0, nacl.box.nonceLength);
       const ciphertext = encrypted.slice(nacl.box.nonceLength);
-      const senderPubKey = useChatStore
-        .getState()
-        .participants.find((p) => p.username !== username)?.publicKey;
+      const senderPubKey = contacts.find(
+        (c) => c.username === currentRecipient,
+      )?.publicKey;
       const keyPair = socketService.getKeyPair();
       if (senderPubKey && keyPair) {
         const decrypted = nacl.box.open(
@@ -246,7 +221,6 @@ export function useChat(): ChatActions {
     socketService.onMessage(handleMessage);
     socketService.onError(handleError);
     socketService.onTyping(handleTyping);
-    socketService.onMessageStatus(handleMessageStatus);
     socketService.onMessageEdited(handleMessageEdited);
     socketService.onMessageDeleted(handleMessageDeleted);
     socketService.onMessageReaction(handleMessageReaction);
@@ -256,37 +230,40 @@ export function useChat(): ChatActions {
       socketService.getSocket().off("message", handleMessage);
       socketService.getSocket().off("error", handleError);
       socketService.getSocket().off("typing", handleTyping);
-      socketService.getSocket().off("messageStatus", handleMessageStatus);
       socketService.getSocket().off("messageEdited", handleMessageEdited);
       socketService.getSocket().off("messageDeleted", handleMessageDeleted);
       socketService.getSocket().off("messageReaction", handleMessageReaction);
     };
-  }, [addMessage, addTypingUser, removeTypingUser, roomName, username]);
+  }, [
+    username,
+    currentRecipient,
+    contacts,
+    addMessage,
+    addTypingUser,
+    removeTypingUser,
+    addContact,
+  ]);
 
-  const joinRoom = (data: RoomFormData) => {
-    const { roomName, password, username } = data;
-
-    const keys = socketService.getKeyPair() || nacl.box.keyPair();
-    socketService.setKeyPair(keys);
-    socketService.joinRoom(
-      roomName,
-      password,
-      username,
-      encodeBase64(keys.publicKey),
-    );
-    setRoomName(roomName);
-    setUsername(username);
+  const startChat = (recipient: string) => {
+    setCurrentRecipient(recipient);
   };
 
   const sendMessage = (content: string, timer?: number) => {
-    if (!socketService.getKeyPair()) {
-      toast.error("Cannot send message: Encryption keys not initialized.");
+    if (!socketService.getKeyPair() || !currentRecipient) {
+      toast.error("Cannot send message: Encryption keys or recipient not set.");
+      return;
+    }
+    const recipientPublicKey = contacts.find(
+      (c) => c.username === currentRecipient,
+    )?.publicKey;
+    if (!recipientPublicKey) {
+      toast.error("Recipient’s public key not found.");
       return;
     }
     const messageId = socketService.sendMessage(
-      roomName,
+      currentRecipient,
       content,
-      useChatStore.getState().participants,
+      recipientPublicKey,
       timer,
     );
     if (messageId) {
@@ -316,14 +293,16 @@ export function useChat(): ChatActions {
     }
   };
 
-  const leaveRoom = () => {
-    socketService.leaveRoom(roomName);
+  const leaveChat = () => {
     reset();
     socketService.setKeyPair(null);
+    socketService.disconnect();
   };
 
   const sendTyping = debounce(() => {
-    socketService.sendTyping(roomName, username);
+    if (currentRecipient) {
+      socketService.sendTyping(currentRecipient, username);
+    }
   }, 500);
 
   const getKeyFingerprint = (key: Uint8Array) => {
@@ -332,24 +311,24 @@ export function useChat(): ChatActions {
   };
 
   return {
-    joinRoom,
     sendMessage,
-    leaveRoom,
     sendTyping,
     getKeyFingerprint,
     editMessage,
     deleteMessage,
     reactToMessage,
+    startChat,
+    leaveChat,
   };
 }
 
 export const useChatState = () =>
   useChatStore(
     useShallow((state) => ({
-      roomName: state.roomName,
       username: state.username,
       messages: state.messages,
-      participants: state.participants,
       typingUsers: state.typingUsers,
+      currentRecipient: state.currentRecipient,
+      contacts: state.contacts,
     })),
   );

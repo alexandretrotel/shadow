@@ -1,23 +1,13 @@
-import { JoinRoom } from "@/components/join-room";
-import { ChatContainer } from "@/components/chat/chat-container";
 import { useChat } from "@/hooks/use-chat";
 import { useChatState } from "@/hooks/use-chat";
 import { motion } from "motion/react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Home } from "./components/home";
+import { ChatRoom } from "./components/chatroom";
 
 function App() {
-  const { roomName, username, messages, participants, typingUsers } =
-    useChatState();
-  const {
-    joinRoom,
-    sendMessage,
-    leaveRoom,
-    getKeyFingerprint,
-    sendTyping,
-    editMessage,
-    deleteMessage,
-    reactToMessage,
-  } = useChat();
+  const { username, currentRecipient, messages, typingUsers } = useChatState();
+  const { sendMessage, leaveChat, sendTyping } = useChat();
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -27,22 +17,17 @@ function App() {
         transition={{ duration: 0.5 }}
         className="bg-card flex min-h-screen flex-col items-center justify-center gap-4"
       >
-        {!roomName ? (
-          <JoinRoom onJoin={joinRoom} />
+        {!username || !currentRecipient ? (
+          <Home />
         ) : (
-          <ChatContainer
-            roomName={roomName}
+          <ChatRoom
             username={username}
+            recipient={currentRecipient}
             messages={messages}
-            participants={participants}
             onSend={sendMessage}
-            onLeave={leaveRoom}
-            getKeyFingerprint={getKeyFingerprint}
+            onLeave={leaveChat}
             typingUsers={typingUsers}
             sendTyping={sendTyping}
-            editMessage={editMessage}
-            deleteMessage={deleteMessage}
-            reactToMessage={reactToMessage}
           />
         )}
       </motion.div>

@@ -4,7 +4,7 @@ import {
   encode as encodeBase64,
   decode as decodeBase64,
 } from "@stablelib/base64";
-import { Message, Participant } from "@/types/chat";
+import { Message } from "@/types/chat";
 import { SERVER_URL } from "./server";
 
 export class SocketService {
@@ -48,58 +48,39 @@ export class SocketService {
     return this.socket;
   }
 
-  onConnect(callback: () => void) {
-    this.socket.on("connect", callback);
-  }
-
-  onDisconnect(callback: () => void) {
-    this.socket.on("disconnect", callback);
-  }
-
-  joinRoom(
-    roomName: string,
-    password: string,
-    username: string,
-    publicKey: string,
-  ) {
-    this.socket.emit("joinRoom", { roomName, password, username, publicKey });
+  register(username: string, publicKey: string) {
+    this.socket.emit("register", { username, publicKey });
   }
 
   sendMessage(
-    roomName: string,
+    recipient: string,
     content: string,
-    participants: Participant[],
+    recipientPublicKey: Uint8Array,
     timer?: number,
   ) {
     if (!this.keyPair) return;
     const messageId = `${Date.now()}${Math.random().toString(36).slice(2)}`;
-    participants.forEach((p) => {
-      const nonce = nacl.randomBytes(nacl.box.nonceLength);
-      const encrypted = nacl.box(
-        new TextEncoder().encode(content),
-        nonce,
-        p.publicKey,
-        this.keyPair!.secretKey,
-      );
-      const fullMessage = new Uint8Array(nonce.length + encrypted.length);
-      fullMessage.set(nonce);
-      fullMessage.set(encrypted, nonce.length);
-      this.socket.emit("message", {
-        roomName,
-        encryptedContent: encodeBase64(fullMessage),
-        timer,
-        messageId,
-      });
+    const nonce = nacl.randomBytes(nacl.box.nonceLength);
+    const encrypted = nacl.box(
+      new TextEncoder().encode(content),
+      nonce,
+      recipientPublicKey,
+      this.keyPair.secretKey,
+    );
+    const fullMessage = new Uint8Array(nonce.length + encrypted.length);
+    fullMessage.set(nonce);
+    fullMessage.set(encrypted, nonce.length);
+    this.socket.emit("message", {
+      recipient,
+      encryptedContent: encodeBase64(fullMessage),
+      timer,
+      messageId,
     });
     return messageId;
   }
 
-  leaveRoom(roomName: string) {
-    this.socket.emit("leaveRoom", { roomName });
-  }
-
-  sendTyping(roomName: string, username: string) {
-    this.socket.emit("typing", { roomName, username });
+  sendTyping(recipient: string, username: string) {
+    this.socket.emit("typing", { recipient, username });
   }
 
   onPublicKeys(
@@ -114,7 +95,6 @@ export class SocketService {
       ({ sender, encryptedContent, timer, messageId }) => {
         if (this.seenMessageIds.has(messageId)) return;
         this.seenMessageIds.add(messageId);
-
         callback({
           sender,
           content: encryptedContent,
@@ -122,10 +102,7 @@ export class SocketService {
           messageId,
           status: "sent",
         });
-
-        this.socket.emit("messageRead", {
-          messageId,
-        });
+        this.socket.emit("messageRead", { messageId });
       },
     );
   }
@@ -145,49 +122,35 @@ export class SocketService {
   }
 
   editMessage(
-    roomName: string,
+    recipient: string,
     messageId: string,
     content: string,
-    participants: Participant[],
+    recipientPublicKey: Uint8Array,
   ) {
     if (!this.keyPair) return;
-    participants.forEach((p) => {
-      const nonce = nacl.randomBytes(nacl.box.nonceLength);
-      const encrypted = nacl.box(
-        new TextEncoder().encode(content),
-        nonce,
-        p.publicKey,
-        this.keyPair!.secretKey,
-      );
-      const fullMessage = new Uint8Array(nonce.length + encrypted.length);
-      fullMessage.set(nonce);
-      fullMessage.set(encrypted, nonce.length);
-      this.socket.emit("editMessage", {
-        roomName,
-        messageId,
-        encryptedContent: encodeBase64(fullMessage),
-      });
+    const nonce = nacl.randomBytes(nacl.box.nonceLength);
+    const encrypted = nacl.box(
+      new TextEncoder().encode(content),
+      nonce,
+      recipientPublicKey,
+      this.keyPair.secretKey,
+    );
+    const fullMessage = new Uint8Array(nonce.length + encrypted.length);
+    fullMessage.set(nonce);
+    fullMessage.set(encrypted, nonce.length);
+    this.socket.emit("editMessage", {
+      recipient,
+      messageId,
+      encryptedContent: encodeBase64(fullMessage),
     });
   }
 
-  reactToMessage(roomName: string, messageId: string, reaction: string) {
-    this.socket.emit("reactToMessage", { roomName, messageId, reaction });
+  deleteMessage(recipient: string, messageId: string) {
+    this.socket.emit("deleteMessage", { recipient, messageId });
   }
 
-  onMessageReaction(
-    callback: (data: {
-      messageId: string;
-      sender: string;
-      reaction: string;
-    }) => void,
-  ) {
-    this.socket.on("messageReaction", (data) => {
-      callback(data);
-    });
-  }
-
-  deleteMessage(roomName: string, messageId: string) {
-    this.socket.emit("deleteMessage", { roomName, messageId });
+  reactToMessage(recipient: string, messageId: string, reaction: string) {
+    this.socket.emit("reactToMessage", { recipient, messageId, reaction });
   }
 
   onMessageEdited(
@@ -198,6 +161,16 @@ export class SocketService {
 
   onMessageDeleted(callback: (data: { messageId: string }) => void) {
     this.socket.on("messageDeleted", callback);
+  }
+
+  onMessageReaction(
+    callback: (data: {
+      messageId: string;
+      sender: string;
+      reaction: string;
+    }) => void,
+  ) {
+    this.socket.on("messageReaction", callback);
   }
 
   getKeyPair() {
