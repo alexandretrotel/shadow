@@ -19,13 +19,15 @@ export const users = pgTable(
 export const contacts = pgTable(
   "contacts",
   {
-    userId: text("user_id")
+    username: text("username")
       .notNull()
       .references(() => users.username),
-    contactId: text("contact_id")
+    contactUsername: text("contact_username")
       .notNull()
       .references(() => users.username),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (contacts) => [primaryKey({ columns: [contacts.userId, contacts.contactId] })]
+  (contacts) => [
+    primaryKey({ columns: [contacts.username, contacts.contactUsername] }),
+  ]
 );
