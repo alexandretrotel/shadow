@@ -9,7 +9,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@common/*": ["../common/*"]
+      "@/shadow/common*": ["../common/*"]
     },
 
     /* Bundler mode */

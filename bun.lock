@@ -6,12 +6,6 @@
       "dependencies": {
         "react-router-dom": "^7.4.1",
       },
-      "devDependencies": {
-        "@types/bun": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "^5.8.2",
-      },
     },
     "client": {
       "name": "@shadow/client",
@@ -97,6 +91,25 @@
         "vite-plugin-pwa": "^1.0.0",
       },
     },
+    "common": {
+      "name": "@shadow/common",
+      "dependencies": {
+        "@neondatabase/serverless": "^1.0.0",
+        "@stablelib/base64": "^2.0.1",
+        "dotenv": "^16.4.7",
+        "drizzle-orm": "^0.41.0",
+        "tweetnacl": "^1.0.3",
+        "zod": "^3.24.2",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "drizzle-kit": "^0.30.6",
+        "tsx": "^4.19.3",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "server": {
       "name": "@shadow/server",
       "dependencies": {
@@ -111,23 +124,6 @@
         "@types/bun": "latest",
         "@types/express": "^5.0.1",
         "@types/socket.io": "^3.0.2",
-        "tsx": "^4.19.3",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
-    "shared": {
-      "name": "@shadow/shared",
-      "dependencies": {
-        "@neondatabase/serverless": "^1.0.0",
-        "dotenv": "^16.4.7",
-        "drizzle-orm": "^0.41.0",
-        "zod": "^3.24.2",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
-        "drizzle-kit": "^0.30.6",
         "tsx": "^4.19.3",
       },
       "peerDependencies": {
@@ -586,9 +582,9 @@
 
     "@shadow/client": ["@shadow/client@workspace:client"],
 
-    "@shadow/server": ["@shadow/server@workspace:server"],
+    "@shadow/common": ["@shadow/common@workspace:common"],
 
-    "@shadow/shared": ["@shadow/shared@workspace:shared"],
+    "@shadow/server": ["@shadow/server@workspace:server"],
 
     "@socket.io/component-emitter": ["@socket.io/component-emitter@3.1.2", "", {}, "sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA=="],
 
@@ -1574,7 +1570,7 @@
 
     "typed-array-length": ["typed-array-length@1.0.7", "", { "dependencies": { "call-bind": "^1.0.7", "for-each": "^0.3.3", "gopd": "^1.0.1", "is-typed-array": "^1.1.13", "possible-typed-array-names": "^1.0.0", "reflect.getprototypeof": "^1.0.6" } }, "sha512-3KS2b+kL7fsuk/eJZ7EQdnEmQoaho/r6KUef7hxvltNA5DR8NAUM+8wJMbJyZ4G9/7i3v5zPBIMN5aybAh2/Jg=="],
 
-    "typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
+    "typescript": ["typescript@5.7.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw=="],
 
     "typescript-eslint": ["typescript-eslint@8.29.0", "", { "dependencies": { "@typescript-eslint/eslint-plugin": "8.29.0", "@typescript-eslint/parser": "8.29.0", "@typescript-eslint/utils": "8.29.0" }, "peerDependencies": { "eslint": "^8.57.0 || ^9.0.0", "typescript": ">=4.8.4 <5.9.0" } }, "sha512-ep9rVd9B4kQsZ7ZnWCVxUE/xDLUUUsRzE0poAeNu+4CkFErLfuvPt/qtm2EpnSyfvsR0S6QzDFSrPCFBwf64fg=="],
 
@@ -1723,8 +1719,6 @@
     "@rollup/pluginutils/picomatch": ["picomatch@2.3.1", "", {}, "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA=="],
 
     "@rollup/pluginutils/rollup": ["rollup@2.79.2", "", { "optionalDependencies": { "fsevents": "~2.3.2" }, "bin": { "rollup": "dist/bin/rollup" } }, "sha512-fS6iqSPZDs3dr/y7Od6y5nha8dW1YnbgtsyotCVvoFGKbERG++CVRFv1meyGDE1SNItQA8BrnCw7ScdAhRJ3XQ=="],
-
-    "@shadow/client/typescript": ["typescript@5.7.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw=="],
 
     "@typescript-eslint/typescript-estree/minimatch": ["minimatch@9.0.5", "", { "dependencies": { "brace-expansion": "^2.0.1" } }, "sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow=="],
 

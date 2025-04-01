@@ -21,6 +21,7 @@
     "drizzle-orm": "^0.41.0",
     "express": "^5.1.0",
     "lodash": "^4.17.21",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "@shadow/common": "workspace:*"
   }
 }

@@ -9,7 +9,7 @@
     "allowJs": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@common/*": ["../common/*"]
+      "@/shadow/common*": ["../common/*"]
     },
 
     // Bundler mode
