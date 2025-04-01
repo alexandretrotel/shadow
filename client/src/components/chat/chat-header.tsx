@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { SERVER_URL } from "@/lib/server";
 import { useChat } from "@/store/chat.store";
-import { getKeyFingerprint } from "../../../../common/src/crypto";
+import { getKeyFingerprint } from "@/lib/crypto";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { publicKeySchema } from "../../../../common/src/schemas";
+import { publicKeySchema } from "@/lib/schemas";
 import { decode } from "@stablelib/base64";
 
 interface ChatHeaderProps {

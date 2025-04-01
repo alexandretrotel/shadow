@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ChatContainer } from "@/components/chat/chat-container";
-import { Message } from "../../../../common/src/types";
+import { Message } from "@/lib/types";
 import { initializeSocket, useSocket } from "@/store/socket.store";
 import { toast } from "sonner";
 import { useChat } from "@/store/chat.store";

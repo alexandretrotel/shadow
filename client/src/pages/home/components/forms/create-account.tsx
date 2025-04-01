@@ -9,7 +9,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { generateKeyPair } from "../../../../../../common/src/crypto";
+import { generateKeyPair } from "@/lib/crypto";
 import { toast } from "sonner";
 import {
   createAccountFormSchema,
@@ -24,7 +24,7 @@ export const CreateAccountForm = () => {
 
   const onSubmit = async (data: CreateAccountFormSchema) => {
     try {
-      await fetch("/register", {
+      const response = await fetch("/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -34,6 +34,10 @@ export const CreateAccountForm = () => {
           publicKey: generateKeyPair().publicKey,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to create account");
+      }
 
       toast.success("Account created successfully");
       form.reset();

@@ -4,7 +4,7 @@ import { InputArea } from "./input-area";
 import { MessageList } from "./message-list";
 import { ChatHeader } from "./chat-header";
 import { cn } from "@/lib/utils";
-import { Message } from "../../../../common/src/types";
+import { Message } from "@/lib/types";
 
 interface ChatRoomProps {
   recipient: string;

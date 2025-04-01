@@ -17,14 +17,14 @@ export const generateKeyPair = (): nacl.BoxKeyPair => nacl.box.keyPair();
 export const encryptMessage = (
   content: string,
   recipientPublicKey: Uint8Array,
-  secretKey: Uint8Array
+  secretKey: Uint8Array,
 ): string => {
   const nonce = nacl.randomBytes(nacl.box.nonceLength);
   const encrypted = nacl.box(
     new TextEncoder().encode(content),
     nonce,
     recipientPublicKey,
-    secretKey
+    secretKey,
   );
   const fullMessage = new Uint8Array(nonce.length + encrypted.length);
   fullMessage.set(nonce);
@@ -42,7 +42,7 @@ export const encryptMessage = (
 export const decryptMessage = (
   encryptedContent: string,
   senderPublicKey: Uint8Array,
-  secretKey: Uint8Array
+  secretKey: Uint8Array,
 ): string => {
   const encrypted = decode(encryptedContent);
   const nonce = encrypted.slice(0, nacl.box.nonceLength);
@@ -51,7 +51,7 @@ export const decryptMessage = (
     ciphertext,
     nonce,
     senderPublicKey,
-    secretKey
+    secretKey,
   );
   return decrypted ? new TextDecoder().decode(decrypted) : "Decryption failed";
 };
@@ -72,7 +72,7 @@ export const getKeyFingerprint = (key: Uint8Array): string => {
  * @returns {Uint8Array} The corresponding public key.
  */
 export const getPublicKeyFromPrivateKey = (
-  secretKey: Uint8Array
+  secretKey: Uint8Array,
 ): Uint8Array => {
   return nacl.box.keyPair.fromSecretKey(secretKey).publicKey;
 };

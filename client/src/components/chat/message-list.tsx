@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { CardContent } from "@/components/ui/card";
 import { MessageItem } from "./message-item";
 import { motion, AnimatePresence } from "motion/react";
-import { Message } from "../../../../common/src/types";
+import { Message } from "@/lib/types";
 
 interface MessageListProps {
   messages: Message[];
