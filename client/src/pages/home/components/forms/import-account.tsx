@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/store/auth.store";
 import { useNavigate } from "react-router-dom";
 import { decode } from "@stablelib/base64";
-import { getPublicKeyFromPrivateKey } from "../../../../../../common/src/crypto";
+import { getPublicKeyFromPrivateKey } from "@common/src/crypto";
 import {
   importFormSchema,
   ImportFormSchema,
@@ -21,7 +21,7 @@ import {
 } from "./auth-schemas";
 
 export const ImportAccountForm = () => {
-  const { setKeyPair, setUsername } = useAuth();
+  const { setAuth } = useAuth();
   const navigate = useNavigate();
 
   const form = useForm({
@@ -31,8 +31,6 @@ export const ImportAccountForm = () => {
 
   const onSubmit = async (data: ImportFormSchema) => {
     try {
-      const { password } = importFormSchema.parse(data);
-
       const response = await fetch("/login", {
         method: "POST",
         headers: {
@@ -50,14 +48,12 @@ export const ImportAccountForm = () => {
       const responseData = await response.json();
       const username = usernameSchema.parse(responseData.username);
 
-      setUsername(username, password);
-      setKeyPair(
-        {
-          secretKey: decode(data.privateKey),
-          publicKey: getPublicKeyFromPrivateKey(decode(data.privateKey)),
-        },
-        password,
-      );
+      const keyPair = {
+        secretKey: decode(data.privateKey),
+        publicKey: getPublicKeyFromPrivateKey(decode(data.privateKey)),
+      };
+
+      await setAuth(username, keyPair, data.password);
 
       toast.success("Account imported successfully");
       form.reset();

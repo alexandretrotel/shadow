@@ -1,13 +1,16 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import nacl from "tweetnacl";
 import crypto from "crypto";
 
 interface AuthStore {
   username: string | null;
-  keyPair: string | null;
-  setUsername: (username: string, password: string) => void;
-  setKeyPair: (keyPair: nacl.BoxKeyPair, password: string) => void;
+  keyPair: nacl.BoxKeyPair | null;
+  setAuth: (
+    username: string,
+    keyPair: nacl.BoxKeyPair,
+    password: string,
+  ) => Promise<void>;
+  loadAuth: (password: string) => Promise<void>;
   getKeyPair: (password: string) => Promise<nacl.BoxKeyPair | null>;
   clearAuth: () => void;
 }
@@ -29,7 +32,7 @@ const deriveKey = async (password: string) => {
   return crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt: encoder.encode("your-salt"), // TODO: Change to a randomly stored salt per user
+      salt: encoder.encode("shadow-salt"), // Use a consistent salt; consider per-user salts in production
       iterations: 100000,
       hash: "SHA-256",
     },
@@ -79,51 +82,49 @@ const decryptData = async (
   }
 };
 
-export const useAuth = create<AuthStore>()(
-  persist(
-    (set) => ({
-      username: null,
-      keyPair: null,
+export const useAuth = create<AuthStore>((set) => ({
+  username: null,
+  keyPair: null,
 
-      setUsername: async (username: string, password: string) => {
-        const encryptedUsername = await encryptData(username, password);
-        set({ username: encryptedUsername });
-      },
+  setAuth: async (
+    username: string,
+    keyPair: nacl.BoxKeyPair,
+    password: string,
+  ) => {
+    const state = { username, keyPair };
+    const serialized = JSON.stringify(state);
+    const encrypted = await encryptData(serialized, password);
+    localStorage.setItem("auth-storage", encrypted);
+    set({ username, keyPair });
+  },
 
-      setKeyPair: async (keyPair: nacl.BoxKeyPair, password: string) => {
-        const encryptedKeyPair = await encryptData(
-          JSON.stringify(keyPair),
-          password,
-        );
-        set({ keyPair: encryptedKeyPair });
-      },
+  loadAuth: async (password: string) => {
+    const encrypted = localStorage.getItem("auth-storage");
+    if (!encrypted) return;
 
-      getKeyPair: async (password: string) => {
-        const encryptedKeyPair = useAuth.getState().keyPair;
-        if (!encryptedKeyPair) return null;
+    const decrypted = await decryptData(encrypted, password);
+    if (!decrypted) {
+      console.error("Decryption failed");
+      return;
+    }
 
-        const decryptedKeyPair = await decryptData(encryptedKeyPair, password);
-        if (!decryptedKeyPair) return null;
+    const state = JSON.parse(decrypted);
+    set({ username: state.username, keyPair: state.keyPair });
+  },
 
-        return JSON.parse(decryptedKeyPair) as nacl.BoxKeyPair;
-      },
+  getKeyPair: async (password: string) => {
+    const encrypted = localStorage.getItem("auth-storage");
+    if (!encrypted) return null;
 
-      clearAuth: () => set({ username: null, keyPair: null }),
-    }),
-    {
-      name: "auth-storage",
-      storage: {
-        getItem: async (name) => {
-          const encrypted = localStorage.getItem(name);
-          if (!encrypted) return null;
-          return await decryptData(encrypted, "user-password"); // TODO: Replace with user input
-        },
-        setItem: async (name, value) => {
-          const encrypted = await encryptData(value, "user-password"); // TOOD: Replace with user input
-          localStorage.setItem(name, encrypted);
-        },
-        removeItem: (name) => localStorage.removeItem(name),
-      },
-    },
-  ),
-);
+    const decrypted = await decryptData(encrypted, password);
+    if (!decrypted) return null;
+
+    const state = JSON.parse(decrypted);
+    return state.keyPair as nacl.BoxKeyPair;
+  },
+
+  clearAuth: () => {
+    set({ username: null, keyPair: null });
+    localStorage.removeItem("auth-storage");
+  },
+}));
