@@ -6,7 +6,7 @@ import { socketService } from "@/lib/socket-service";
 import { useChatStore } from "@/store/chat-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils"; // Utility function for class merging
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const Account = () => {
