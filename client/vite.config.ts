@@ -21,7 +21,7 @@ export default defineConfig({
         name: "Shadow",
         short_name: "Shadow",
         description: "Whisper in the Dark – Secure, Ephemeral, Unseen.",
-        theme_color: "#000000",
+        theme_color: "#18181b",
         icons: [
           {
             src: "pwa-192x192.png",

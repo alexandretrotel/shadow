@@ -2,44 +2,21 @@ import {
   encode as encodeBase64,
   decode as decodeBase64,
 } from "@stablelib/base64";
-import { DownloadIcon, Edit2Icon, XIcon } from "lucide-react";
-import { Message } from "@/types/chat";
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { DownloadIcon } from "lucide-react";
+import { motion } from "framer-motion";
 import VoiceMessage from "./voice-message";
 import { cn } from "@/lib/utils";
-import { featureFlags, isFeatureEnabled } from "@/lib/features";
+import { featureFlags } from "@/lib/features";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
 interface MessageItemProps {
   message: Message;
   username: string;
-  onEdit: (messageId: string, content: string) => void;
-  onDelete: (messageId: string) => void;
-  onReact: (messageId: string, reaction: string) => void;
 }
 
-export const MessageItem = ({
-  message,
-  username,
-  onEdit,
-  onDelete,
-}: MessageItemProps) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState(message.content);
-  const [isHovered, setIsHovered] = useState(false);
-
+export const MessageItem = ({ message, username }: MessageItemProps) => {
   const isOwnMessage = message.sender === username;
-
-  const handleEdit = () => {
-    if (isFeatureEnabled("enableEditDelete")) {
-      onEdit(message.messageId, editContent);
-      setIsEditing(false);
-    }
-  };
 
   const isImageFile = (fileName: string) =>
     IMAGE_EXTENSIONS.includes(fileName.split(".").pop()?.toLowerCase() || "");
@@ -133,8 +110,6 @@ export const MessageItem = ({
         "mb-4 flex flex-col gap-2",
         isOwnMessage ? "items-end" : "items-start",
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       {(imageContent || voiceContent || textContent) && (
         <div
@@ -162,77 +137,7 @@ export const MessageItem = ({
                     {message.sender}
                   </span>
                 )}
-                <AnimatePresence mode="wait">
-                  {isEditing && isOwnMessage ? (
-                    <motion.div
-                      key="edit"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex items-center gap-2"
-                    >
-                      <Input
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        className="bg-background text-foreground border-border w-full"
-                      />
-                      <Button size="sm" onClick={handleEdit}>
-                        Save
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsEditing(false)}
-                      >
-                        <XIcon className="size-4" />
-                      </Button>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="content"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      {textContent}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                {message.timer && (
-                  <span className="text-muted-foreground mt-1 text-xs opacity-70">
-                    Self-destructs in {message.timer}s
-                  </span>
-                )}
               </div>
-
-              {isFeatureEnabled("enableEditDelete") && isOwnMessage && (
-                <AnimatePresence>
-                  {isHovered && !isEditing && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute -top-2 right-2 flex gap-1"
-                    >
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="bg-background/80 h-6 w-6 p-0"
-                        onClick={() => setIsEditing(true)}
-                      >
-                        <Edit2Icon className="size-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="bg-background/80 h-6 w-6 p-0"
-                        onClick={() => onDelete(message.messageId)}
-                      >
-                        <XIcon className="size-3" />
-                      </Button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              )}
             </motion.div>
           )}
 

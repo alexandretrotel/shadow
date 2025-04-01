@@ -1,35 +1,28 @@
-import { ChatRoomProps } from "@/types/chat";
-import { MessageSearch } from "./message-search";
 import { motion } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { InputArea } from "./input-area";
 import { MessageList } from "./message-list";
-import { Participants } from "./participants";
+import { ChatHeader } from "./chat-header";
 import { cn } from "@/lib/utils";
+import { Message } from "../../../../shared/src/types";
+
+interface ChatRoomProps {
+  username: string;
+  messages: Message[];
+  onSend: (content: string) => void;
+  onLeave: () => void;
+  isTyping: boolean;
+  sendTyping: () => void;
+}
 
 export const ChatContainer = ({
-  roomName,
   username,
   messages,
-  participants,
   onSend,
   onLeave,
-  getKeyFingerprint,
-  typingUsers,
+  isTyping,
   sendTyping,
-  editMessage,
-  deleteMessage,
-  reactToMessage,
-}: ChatRoomProps & {
-  editMessage: (messageId: string, content: string) => void;
-  deleteMessage: (messageId: string) => void;
-  reactToMessage: (messageId: string, reaction: string) => void;
-}) => {
-  const scrollToMessage = (messageId: string) => {
-    const element = document.getElementById(`msg-${messageId}`);
-    element?.scrollIntoView({ behavior: "smooth" });
-  };
-
+}: ChatRoomProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -43,20 +36,11 @@ export const ChatContainer = ({
           "bg-background",
         )}
       >
-        <Participants
-          roomName={roomName}
-          participants={participants}
-          onLeave={onLeave}
-          getKeyFingerprint={getKeyFingerprint}
-        />
-        <MessageSearch messages={messages} onSelect={scrollToMessage} />
+        <ChatHeader username={username} onLeave={onLeave} />
         <MessageList
           messages={messages}
           username={username}
-          typingUsers={typingUsers}
-          onEdit={editMessage}
-          onDelete={deleteMessage}
-          onReact={reactToMessage}
+          isTyping={isTyping}
         />
         <InputArea onSend={onSend} sendTyping={sendTyping} />
       </Card>
