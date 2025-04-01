@@ -68,3 +68,14 @@ export const getKeyFingerprint = (key: Uint8Array): string => {
   const hash = nacl.hash(key);
   return encodeBase64(hash.slice(0, 8));
 };
+
+/**
+ * Derives the public key from a given private (secret) key.
+ * @param {Uint8Array} secretKey - The secret (private) key.
+ * @returns {Uint8Array} The corresponding public key.
+ */
+export const getPublicKeyFromPrivateKey = (
+  secretKey: Uint8Array
+): Uint8Array => {
+  return nacl.box.keyPair.fromSecretKey(secretKey).publicKey;
+};
