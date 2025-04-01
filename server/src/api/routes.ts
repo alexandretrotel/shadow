@@ -8,6 +8,10 @@ import { getPublicKeyFromPrivateKey } from "../lib/crypto";
 import { privateKeySchema, usernameAndPublicKeySchema } from "@/lib/schemas";
 
 export function setupRoutes(app: express.Express) {
+  app.get("/", (req, res) => {
+    res.send("Welcome to the Shadow API!");
+  });
+
   app.post("/register", async (req, res) => {
     const { username, publicKey } = usernameAndPublicKeySchema.parse(req.body);
 
