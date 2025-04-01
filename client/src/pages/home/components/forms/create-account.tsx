@@ -1,6 +1,5 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,19 +11,18 @@ import {
 } from "@/components/ui/form";
 import { generateKeyPair } from "@shared/src/crypto";
 import { toast } from "sonner";
-
-const formSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-});
-type FormSchema = z.infer<typeof formSchema>;
+import {
+  createAccountFormSchema,
+  CreateAccountFormSchema,
+} from "./auth-schemas";
 
 export const CreateAccountForm = () => {
-  const form = useForm<FormSchema>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { username: "" },
+  const form = useForm<CreateAccountFormSchema>({
+    resolver: zodResolver(createAccountFormSchema),
+    defaultValues: { username: "", password: "", confirmPassword: "" },
   });
 
-  const onSubmit = async (data: FormSchema) => {
+  const onSubmit = async (data: CreateAccountFormSchema) => {
     try {
       await fetch("/register", {
         method: "POST",
@@ -54,6 +52,38 @@ export const CreateAccountForm = () => {
             <FormItem>
               <FormControl>
                 <Input placeholder="Enter a username" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="Enter a password"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="Confirm your password"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

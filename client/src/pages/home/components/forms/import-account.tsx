@@ -1,6 +1,5 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,21 +10,30 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-
-const formSchema = z.object({
-  privateKey: z.string().min(1, "Private key is required"),
-});
-type FormSchema = z.infer<typeof formSchema>;
+import { useAuth } from "@/store/auth.store";
+import { useNavigate } from "react-router-dom";
+import { decode } from "@stablelib/base64";
+import { getPublicKeyFromPrivateKey } from "@shared/src/crypto";
+import {
+  importFormSchema,
+  ImportFormSchema,
+  usernameSchema,
+} from "./auth-schemas";
 
 export const ImportAccountForm = () => {
+  const { setKeyPair, setUsername } = useAuth();
+  const navigate = useNavigate();
+
   const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: { privateKey: "" },
+    resolver: zodResolver(importFormSchema),
+    defaultValues: { privateKey: "", password: "", confirmPassword: "" },
   });
 
-  const onSubmit = async (data: FormSchema) => {
+  const onSubmit = async (data: ImportFormSchema) => {
     try {
-      await fetch("/login", {
+      const { password } = importFormSchema.parse(data);
+
+      const response = await fetch("/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -35,10 +43,27 @@ export const ImportAccountForm = () => {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error("Failed to import account");
+      }
+
+      const responseData = await response.json();
+      const username = usernameSchema.parse(responseData.username);
+
+      setUsername(username, password);
+      setKeyPair(
+        {
+          secretKey: decode(data.privateKey),
+          publicKey: getPublicKeyFromPrivateKey(decode(data.privateKey)),
+        },
+        password,
+      );
+
       toast.success("Account imported successfully");
       form.reset();
+      navigate("/");
     } catch {
-      toast.error("Error importing account");
+      toast.error("Failed to import account");
     }
   };
 
@@ -52,6 +77,38 @@ export const ImportAccountForm = () => {
             <FormItem>
               <FormControl>
                 <Input placeholder="Paste your private key" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="Enter your password"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="Confirm your password"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
