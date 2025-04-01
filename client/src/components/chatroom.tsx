@@ -7,6 +7,7 @@ import {
   decode as decodeBase64,
 } from "@stablelib/base64";
 import { PaperclipIcon, XIcon, DownloadIcon } from "lucide-react";
+import { useChat, useChatState } from "@/hooks/use-chat";
 
 interface Message {
   sender: string;
@@ -39,6 +40,9 @@ export const ChatRoom = memo(function ChatRoom({
 }: ChatRoomProps) {
   const [input, setInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
+
+  const { contacts } = useChatState();
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,7 +117,12 @@ export const ChatRoom = memo(function ChatRoom({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CardTitle className="text-secondary-foreground text-lg tracking-wide">
-              Chat with {recipient}
+              Chat with {recipient} (
+              {useChat().getKeyFingerprint(
+                contacts.find((c) => c.username === recipient)?.publicKey ||
+                  new Uint8Array(),
+              )}
+              ){" "}
             </CardTitle>
             <div className="text-muted-foreground bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs">
               pubkey

@@ -8,8 +8,23 @@ import nacl from "tweetnacl";
 import { decode as decodeBase64 } from "@stablelib/base64";
 import "dotenv/config";
 import { z } from "zod";
+import cors from "cors";
 
 const app = express();
+
+// Middleware to handle CORS
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? "https://shadow.alexandretrotel.org"
+        : "*",
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
+
+// WebSocket server
 app.use(express.json());
 const server = createServer(app);
 const io = new Server(server, {
@@ -19,6 +34,7 @@ const io = new Server(server, {
         ? "https://shadow.alexandretrotel.org"
         : "*",
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
