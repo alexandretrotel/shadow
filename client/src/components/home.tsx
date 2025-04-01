@@ -103,7 +103,7 @@ export function Home() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full px-4"
       >
-        <Card className="mx-auto mt-10 max-w-md border-none shadow-lg">
+        <Card className="mx-auto mt-10 max-w-md border-none shadow-none">
           <CardHeader>
             <CardTitle className="text-secondary-foreground text-lg tracking-wide">
               Set Your Username

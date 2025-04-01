@@ -68,7 +68,7 @@ const Account = () => {
           <div
             className={cn(
               "bg-muted hover:bg-secondary group relative flex w-full cursor-pointer items-center justify-center rounded-md border p-2 text-sm transition",
-              copiedPublic ? "bg-green-500 text-white hover:bg-green-500" : "",
+              copiedPublic ? "opacity-50" : "opacity-100",
             )}
             onClick={handleCopyPublic}
           >
