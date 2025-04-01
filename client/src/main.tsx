@@ -2,11 +2,12 @@ import "./index.css";
 
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Home } from "./components/home.tsx";
+import { Home } from "./pages/home.tsx";
 import { Toaster } from "@/components/ui/sonner.tsx";
-import Account from "./components/account.tsx";
+import Account from "./pages/account.tsx";
 import { ThemeProvider } from "./components/theme-provider.tsx";
 import { motion } from "motion/react";
+import { Chat } from "./pages/chat.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -20,7 +21,7 @@ createRoot(document.getElementById("root")!).render(
         <Routes>
           <Route index element={<Home />} />
           <Route path="account" element={<Account />} />
-          <Route path="chat/:recipient" element={} />
+          <Route path="chat/:recipient" element={<Chat />} />
         </Routes>
 
         <Toaster />
