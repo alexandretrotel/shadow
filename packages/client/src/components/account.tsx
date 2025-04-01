@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { encode as encodeBase64 } from "@stablelib/base64";
 import { Check, Clipboard } from "lucide-react";
-import { socketService } from "@/lib/socket-service";
 import { useChatStore } from "@/store/chat-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getKeyPair } from "@/lib/storage";
 
 const Account = () => {
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -15,7 +15,7 @@ const Account = () => {
   const [copiedPrivate, setCopiedPrivate] = useState(false);
   const navigate = useNavigate();
   const { username } = useChatStore();
-  const keyPair = socketService.getKeyPair();
+  const keyPair = getKeyPair();
 
   const publicKeyBase64 = encodeBase64(keyPair?.publicKey || new Uint8Array());
   const privateKeyBase64 = encodeBase64(keyPair?.secretKey || new Uint8Array());
