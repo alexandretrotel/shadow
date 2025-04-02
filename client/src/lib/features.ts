@@ -3,6 +3,7 @@ export const featureFlags = {
   enableReactions: false,
   enableEditDelete: false,
   enableImageDownload: false,
+  enableVerifyQRCode: false,
 };
 
 export const isFeatureEnabled = (

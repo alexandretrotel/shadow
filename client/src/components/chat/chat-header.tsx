@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { publicKeySchema } from "@/lib/schemas";
 import { decode } from "@stablelib/base64";
 import { VerifyQR } from "./verify-qr";
+import { featureFlags } from "@/lib/features";
 
 interface ChatHeaderProps {
   recipient: string;
@@ -100,7 +101,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
         </motion.div>
       </div>
 
-      {recipientPublicKey && (
+      {recipientPublicKey && featureFlags.enableVerifyQRCode && (
         <VerifyQR
           recipient={recipient}
           recipientPublicKey={recipientPublicKey}
