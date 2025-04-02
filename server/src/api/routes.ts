@@ -107,4 +107,25 @@ export function setupRoutes(app: express.Express) {
       res.status(500).json({ error: "Failed to fetch user" });
     }
   });
+
+  app.get("/user-exists/:username", async (req, res) => {
+    const { username } = req.params;
+
+    try {
+      // Check if the user exists in the database
+      const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.username, username))
+        .execute();
+
+      if (user.length > 0) {
+        res.status(200).json({ exists: true });
+      } else {
+        res.status(404).json({ exists: false });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check user existence" });
+    }
+  });
 }

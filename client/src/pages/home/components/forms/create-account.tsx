@@ -20,17 +20,8 @@ import { encode } from "@stablelib/base64";
 import { useAuth } from "@/store/auth.store";
 import { z } from "zod";
 
-const userSchema = z.object({
-  user: z.object({
-    username: z.string(),
-    publicKey: z.string(),
-    createdAt: z.union([
-      z
-        .string()
-        .transform((val) => new Date(val).toISOString() as unknown as Date),
-      z.date(),
-    ]),
-  }),
+const userExistsSchema = z.object({
+  exists: z.boolean(),
 });
 
 export const CreateAccountForm = () => {
@@ -44,7 +35,7 @@ export const CreateAccountForm = () => {
   const onSubmit = async (data: CreateAccountFormSchema) => {
     try {
       const usernameResponse = await fetch(
-        `${SERVER_URL}/user/${data.username}`,
+        `${SERVER_URL}/user-exists/${data.username}`,
         {
           method: "GET",
           headers: {
@@ -53,14 +44,14 @@ export const CreateAccountForm = () => {
         },
       );
 
-      if (!usernameResponse.ok) {
+      if (usernameResponse.status !== 200 && usernameResponse.status !== 404) {
         throw new Error("Error checking username");
       }
 
       const usernameData = await usernameResponse.json();
-      const { user } = userSchema.parse(usernameData);
+      const { exists } = userExistsSchema.parse(usernameData);
 
-      if (user) {
+      if (exists) {
         toast.error("Username already exists");
         return;
       }

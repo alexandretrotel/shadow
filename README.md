@@ -5,7 +5,7 @@ A secure, end-to-end encrypted chat application built with Bun, Vite, Express, S
 ## Features
 
 - E2EE with TweetNaCl
-- Message status (sent/delivered/failed/read)
+- Message status (sent/delivered/failed)
 - File sharing
 - Typing indicators
 - Key fingerprint verification

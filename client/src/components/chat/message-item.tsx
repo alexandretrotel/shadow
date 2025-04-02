@@ -143,13 +143,11 @@ export const MessageItem = ({ message, isOwnMessage }: MessageItemProps) => {
               className={cn(
                 "font-mono",
                 message.status === "failed" && "text-destructive",
-                message.status === "read" && "text-blue-500",
               )}
             >
               {message.status === "sent" && "✓ Sent"}
-              {message.status === "received" && "✓ Received"}
               {message.status === "delivered" && "✓✓ Delivered"}
-              {message.status === "read" && "✓✓ Read"}
+              {message.status === "received" && "✓✓ Received"}
               {message.status === "failed" && "✗ Failed"}
             </span>
           </motion.div>

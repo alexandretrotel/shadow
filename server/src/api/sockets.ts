@@ -71,24 +71,6 @@ export function setupSockets(io: Server) {
       }
     });
 
-    // Handle reading events
-    socket.on(
-      "read",
-      (data: { sender: string; recipient: string; messageId: string }) => {
-        const senderSocketId = connectedUsers[data.sender]; // Get sender's socket ID
-
-        if (senderSocketId) {
-          // Notify the sender that their message was read
-          io.to(senderSocketId).emit("messageRead", {
-            messageId: data.messageId,
-            recipient: data.recipient,
-            status: "read",
-            timestamp: new Date().toISOString(),
-          });
-        }
-      }
-    );
-
     // Handle user disconnect
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
