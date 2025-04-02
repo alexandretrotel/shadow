@@ -24,7 +24,7 @@ export const MessageList = ({
   }, [messages]);
 
   return (
-    <CardContent className="flex h-full flex-grow flex-col p-0">
+    <CardContent className="flex flex-grow flex-col p-0">
       <div className="bg-muted flex-grow overflow-y-auto p-4">
         <AnimatePresence>
           {messages?.map((msg) => {
