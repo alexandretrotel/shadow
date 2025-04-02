@@ -39,6 +39,14 @@ export function setupSockets(io: Server) {
             status: "delivered",
           });
         }
+
+        if (senderSocketId) {
+          // Send the message to the recipient
+          io.to(recipientSocketId).emit("message", {
+            ...data.message,
+            status: "received",
+          });
+        }
       }
     );
 
