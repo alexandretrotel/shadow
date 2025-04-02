@@ -4,7 +4,8 @@
   "scripts": {
     "client": "bun run --filter @shadow/client dev",
     "server": "bun run --filter @shadow/server start",
-    "dev": "bun run --filter @shadow/client dev & bun run --filter @shadow/server start"
+    "dev": "bun run --filter @shadow/client dev & bun run --filter @shadow/server start",
+    "build": "bun run --filter @shadow/client build & bun run --filter @shadow/server build"
   },
   "type": "module",
   "workspaces": [
