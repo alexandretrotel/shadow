@@ -10,7 +10,7 @@ export const importFormSchema = z
         const hasUpperCase = /[A-Z]/.test(val);
         const hasLowerCase = /[a-z]/.test(val);
         const hasNumber = /\d/.test(val);
-        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(val);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>+=]/.test(val);
         return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
       }, "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"),
     confirmPassword: z.string().min(8, "Confirm password is required"),
