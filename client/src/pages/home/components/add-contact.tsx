@@ -26,13 +26,15 @@ export const AddContact = () => {
   });
 
   const handleAddContact = async (data: { contact: string }) => {
-    if (isInContacts(data.contact)) {
+    const contact = data.contact.trim();
+
+    if (isInContacts(contact)) {
       toast.error("Contact already exists");
       return;
     }
 
     try {
-      const userResponse = await fetch(`${SERVER_URL}/user/${data.contact}`, {
+      const userResponse = await fetch(`${SERVER_URL}/user/${contact}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -41,13 +43,10 @@ export const AddContact = () => {
         throw new Error("User not found");
       }
 
-      const keyResponse = await fetch(
-        `${SERVER_URL}/public-key/${data.contact}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        },
-      );
+      const keyResponse = await fetch(`${SERVER_URL}/public-key/${contact}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
 
       if (!keyResponse.ok) {
         throw new Error("Public key not found");
@@ -59,19 +58,17 @@ export const AddContact = () => {
       const fingerprint = getKeyFingerprint(decodedPublicKey);
 
       // Check stored fingerprint
-      const storedFingerprint = localStorage.getItem(
-        `fingerprint_${data.contact}`,
-      );
+      const storedFingerprint = localStorage.getItem(`fingerprint_${contact}`);
       if (storedFingerprint && storedFingerprint !== fingerprint) {
-        toast.error(`Warning: Public key for ${data.contact} has changed!`);
+        toast.error(`Warning: Public key for ${contact} has changed!`);
         return;
       }
 
       // Store fingerprint and add contact
-      localStorage.setItem(`fingerprint_${data.contact}`, fingerprint);
-      addContact(data.contact);
+      localStorage.setItem(`fingerprint_${contact}`, fingerprint);
+      addContact(contact);
       contactForm.reset();
-      toast.success(`Added ${data.contact} to contacts`);
+      toast.success(`Added ${contact} to contacts`);
     } catch {
       toast.error("User not found");
     }
