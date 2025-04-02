@@ -14,6 +14,7 @@ import { Toaster } from "./components/ui/sonner";
 import { motion } from "motion/react";
 import { ThemeProvider } from "./providers/theme-provider";
 import { useInitializeSocket } from "./store/socket.store";
+import { cn } from "./lib/utils";
 
 export const Root = () => {
   const [password, setPassword] = useState("");
@@ -50,15 +51,17 @@ export const Root = () => {
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className={`bg-card text-foreground flex min-h-screen items-center justify-center antialiased ${
-          !location.pathname.startsWith("/chat") ? "px-4 md:px-0" : "px-0"
-        }`}
+        className={cn(
+          "bg-card text-foreground flex min-h-screen items-center justify-center antialiased",
+          !location.pathname.startsWith("/chat") ? "px-4 md:px-0" : "px-0",
+          isPasswordModalOpen && "blur-xl",
+        )}
       >
         <Dialog
           open={isPasswordModalOpen}
           onOpenChange={setIsPasswordModalOpen}
         >
-          <DialogContent className="backdrop-blur">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Enter Password</DialogTitle>
             </DialogHeader>
