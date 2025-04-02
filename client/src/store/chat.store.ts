@@ -17,7 +17,13 @@ export const useChat = create<ChatStore>()(
         set((state) => ({
           messages: {
             ...state.messages,
-            [recipient]: [...(state.messages[recipient] || []), message],
+            [recipient]: [
+              // Check if a message with the same ID exists and replace it
+              ...(state.messages[recipient] || []).filter(
+                (m) => m.messageId !== message.messageId,
+              ),
+              message, // Add the new or updated message
+            ],
           },
         })),
 
