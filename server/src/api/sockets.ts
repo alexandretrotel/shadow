@@ -26,12 +26,12 @@ export function setupSockets(io: Server) {
     });
 
     // Handle user messages
-    socket.on("message", (data: { recipient: string; message: Message }) => {
-      const recipientSocketId = connectedUsers[data.recipient]; // Get recipient's socket ID
+    socket.on("message", (data: { username: string; message: Message }) => {
+      const usernameSocketId = connectedUsers[data.username]; // Get sender's socket ID
 
-      if (recipientSocketId) {
+      if (usernameSocketId) {
         // Send the message to the recipient
-        io.to(recipientSocketId).emit("message", {
+        io.to(usernameSocketId).emit("message", {
           ...data.message,
           status: "delivered",
         });

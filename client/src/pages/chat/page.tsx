@@ -34,7 +34,7 @@ export const Chat = () => {
           status: "sent",
         };
 
-        socket.emit("message", { recipient, message });
+        socket.emit("message", { username, message });
         addMessage(recipient, message);
       }, 300),
     [socket, username, recipient, addMessage],
