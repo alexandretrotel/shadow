@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { publicKeySchema } from "@/lib/schemas";
 import { decode } from "@stablelib/base64";
+import { VerifyQR } from "./verify-qr";
 
 interface ChatHeaderProps {
   recipient: string;
@@ -73,7 +74,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
             transition={{ duration: 0.3 }}
             className="bg-muted text-muted-foreground hover:text-foreground rounded border px-2 py-1 font-mono text-xs"
           >
-            <span className="blur-xs transition-all duration-400 hover:blur-none">
+            <span className="transition-all duration-400 hover:blur-none md:blur-xs">
               {getKeyFingerprint(decode(recipientPublicKey || ""))}
             </span>
           </motion.span>
@@ -98,6 +99,13 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
           </Button>
         </motion.div>
       </div>
+
+      {recipientPublicKey && (
+        <VerifyQR
+          recipient={recipient}
+          recipientPublicKey={recipientPublicKey}
+        />
+      )}
     </CardHeader>
   );
 };

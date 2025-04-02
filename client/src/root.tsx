@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "motion/react";
 import { ThemeProvider } from "./providers/theme-provider";
@@ -20,6 +20,7 @@ export const Root = () => {
 
   const { username, loadAuth } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const encrypted = localStorage.getItem("auth-storage");
@@ -47,7 +48,9 @@ export const Root = () => {
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="bg-card text-foreground flex min-h-screen items-center justify-center px-4 antialiased md:px-0"
+        className={`bg-card text-foreground flex min-h-screen items-center justify-center antialiased ${
+          !location.pathname.startsWith("/chat") ? "px-4 md:px-0" : "px-0"
+        }`}
       >
         <Dialog
           open={isPasswordModalOpen}

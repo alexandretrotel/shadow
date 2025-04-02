@@ -9,6 +9,7 @@ import { AccountIdentity } from "./components/account-idendity";
 import { KeyDisplay } from "./components/key-display";
 import { QRCodeDisplay } from "./components/qrcode-display";
 import { useAuth } from "@/store/auth.store";
+import { getKeyFingerprint } from "@/lib/crypto";
 
 export const Account = () => {
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -21,25 +22,18 @@ export const Account = () => {
   const { username, keyPair } = useAuth();
 
   useEffect(() => {
-    if (keyPair) {
-      console.log(
-        "publicKey instanceof Uint8Array:",
-        keyPair.publicKey instanceof Uint8Array,
-      );
-      console.log(
-        "secretKey instanceof Uint8Array:",
-        keyPair.secretKey instanceof Uint8Array,
-      );
-
+    if (keyPair && username) {
       const encodedPublicKey = encode(keyPair.publicKey || new Uint8Array());
       const encodedPrivateKey = encode(keyPair.secretKey || new Uint8Array());
+      const fingerprint = getKeyFingerprint(keyPair.publicKey);
 
       setPublicKey(encodedPublicKey);
       setPrivateKey(encodedPrivateKey);
 
       const generateQR = async () => {
         const QRCode = await import("qrcode");
-        const dataUrl = await QRCode.toDataURL(encodedPublicKey);
+        const qrData = JSON.stringify({ username, fingerprint });
+        const dataUrl = await QRCode.toDataURL(qrData);
         setQrCode(dataUrl);
       };
 
@@ -47,7 +41,7 @@ export const Account = () => {
         toast.error("Failed to generate QR code.");
       });
     }
-  }, [keyPair]);
+  }, [keyPair, username]);
 
   const handleCopy = (key: string, type: "public" | "private") => {
     navigator.clipboard.writeText(key);
