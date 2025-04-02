@@ -35,9 +35,8 @@ export const Chat = () => {
         };
 
         socket.emit("message", { sender: username, recipient, message });
-        addMessage(recipient, message);
       }, 300),
-    [socket, username, recipient, addMessage],
+    [socket, username, recipient],
   );
 
   const debouncedHandleTyping = useMemo(
