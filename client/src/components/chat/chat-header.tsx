@@ -23,24 +23,36 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
 
   useEffect(() => {
     const fetchRecipientPublicKey = async () => {
-      const response = await fetch(`${SERVER_URL}/public-key/${recipient}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      try {
+        const response = await fetch(`${SERVER_URL}/public-key/${recipient}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          throw new Error("Failed to fetch public key");
+        }
+
+        const data = await response.json();
+        const { publicKey } = publicKeySchema.parse(data);
+        const decodedPublicKey = decode(publicKey);
+        const newFingerprint = getKeyFingerprint(decodedPublicKey);
+
+        const storedFingerprint = localStorage.getItem(
+          `fingerprint_${recipient}`,
+        );
+        if (storedFingerprint && storedFingerprint !== newFingerprint) {
+          toast.error(`Warning: Public key for ${recipient} has changed!`);
+        }
+
+        setRecipientPublicKey(publicKey);
+      } catch {
         toast.error(
           `Failed to fetch public key for ${recipient}. Please try again.`,
         );
-        return;
       }
-
-      const data = await response.json();
-      const { publicKey } = publicKeySchema.parse(data);
-
-      setRecipientPublicKey(publicKey);
     };
 
     fetchRecipientPublicKey();

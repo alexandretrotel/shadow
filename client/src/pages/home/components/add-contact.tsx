@@ -12,6 +12,9 @@ import { useContacts } from "@/store/contacts.store";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { SERVER_URL } from "@/lib/server";
+import { getKeyFingerprint } from "@/lib/crypto";
+import { decode } from "@stablelib/base64";
+import { publicKeySchema } from "@/lib/schemas";
 
 export const AddContact = () => {
   const { addContact, isInContacts } = useContacts();
@@ -23,25 +26,52 @@ export const AddContact = () => {
   });
 
   const handleAddContact = async (data: { contact: string }) => {
+    if (isInContacts(data.contact)) {
+      toast.error("Contact already exists");
+      return;
+    }
+
     try {
-      const response = await fetch(`${SERVER_URL}/user/${data.contact}`, {
+      const userResponse = await fetch(`${SERVER_URL}/user/${data.contact}`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
 
-      if (!response.ok) {
+      if (!userResponse.ok) {
         throw new Error("User not found");
       }
 
-      if (isInContacts(data.contact)) {
-        toast.error("Contact already exists");
+      const keyResponse = await fetch(
+        `${SERVER_URL}/public-key/${data.contact}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+
+      if (!keyResponse.ok) {
+        throw new Error("Public key not found");
+      }
+
+      const keyData = await keyResponse.json();
+      const { publicKey } = publicKeySchema.parse(keyData);
+      const decodedPublicKey = decode(publicKey);
+      const fingerprint = getKeyFingerprint(decodedPublicKey);
+
+      // Check stored fingerprint
+      const storedFingerprint = localStorage.getItem(
+        `fingerprint_${data.contact}`,
+      );
+      if (storedFingerprint && storedFingerprint !== fingerprint) {
+        toast.error(`Warning: Public key for ${data.contact} has changed!`);
         return;
       }
 
+      // Store fingerprint and add contact
+      localStorage.setItem(`fingerprint_${data.contact}`, fingerprint);
       addContact(data.contact);
       contactForm.reset();
+      toast.success(`Added ${data.contact} to contacts`);
     } catch {
       toast.error("User not found");
     }
