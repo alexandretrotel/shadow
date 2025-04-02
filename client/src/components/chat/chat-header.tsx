@@ -68,17 +68,9 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
         <div className="flex items-center gap-4">
           <CardTitle className="text-secondary-foreground text-lg tracking-wide">
             {recipient}
-
-            <span
-              className={`ml-2 block h-2 w-2 rounded-full md:hidden ${
-                isOnline(recipient)
-                  ? "animate-pulse bg-green-500"
-                  : "bg-gray-500"
-              }`}
-            />
           </CardTitle>
 
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="flex items-center gap-2">
             <span
               className={`h-2 w-2 rounded-full ${
                 isOnline(recipient)
@@ -108,7 +100,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
             onClick={() => clearMessages(recipient)}
             variant="ghost"
             size="sm"
-            className="text-muted-foreground"
+            className="text-muted-foreground hidden md:inline-flex"
           >
             Clear Chat
           </Button>
