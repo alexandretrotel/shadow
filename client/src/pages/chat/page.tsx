@@ -18,7 +18,7 @@ export const Chat = () => {
 
   const { socket, closeSocket } = useSocket();
   const { username, getKeyPair } = useAuth();
-  const { messages, addMessage } = useChat();
+  const { messages, addMessage, updateMessageStatus } = useChat();
   const navigate = useNavigate();
   const recipientPublicKey = usePublicKey(recipient || "");
 
@@ -92,6 +92,9 @@ export const Chat = () => {
       socket.off("stopTyping").on("stopTyping", () => {
         setIsTyping(false);
       });
+      socket.off("messageRead").on("messageRead", ({ messageId, status }) => {
+        updateMessageStatus(recipient, messageId, status);
+      });
     };
 
     // Initial attachment
@@ -107,6 +110,7 @@ export const Chat = () => {
       socket.off("typing");
       socket.off("stopTyping");
       socket.off("reconnect");
+      socket.off("messageRead");
       debouncedSendMessage.cancel();
       debouncedHandleTyping.cancel();
     };
@@ -118,6 +122,7 @@ export const Chat = () => {
     username,
     debouncedSendMessage,
     debouncedHandleTyping,
+    updateMessageStatus,
   ]);
 
   const handleSendMessage = (content: string) => {

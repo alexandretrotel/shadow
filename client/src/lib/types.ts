@@ -3,4 +3,5 @@ export interface Message {
   sender: string;
   content: string;
   status?: "sent" | "delivered" | "failed" | "read" | "received";
+  timestamp?: string;
 }
