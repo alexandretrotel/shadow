@@ -147,6 +147,7 @@ export const MessageItem = ({ message, isOwnMessage }: MessageItemProps) => {
               )}
             >
               {message.status === "sent" && "✓ Sent"}
+              {message.status === "received" && "✓ Received"}
               {message.status === "delivered" && "✓✓ Delivered"}
               {message.status === "read" && "✓✓ Read"}
               {message.status === "failed" && "✗ Failed"}
