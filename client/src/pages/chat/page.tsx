@@ -18,17 +18,33 @@ export const Chat = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!socket) return;
-
-    if (!recipient) {
-      toast.error("Recipient not found");
+    if (!socket || !recipient || !username) {
+      if (!socket) toast.error("Not connected to the server");
+      if (!recipient) toast.error("Recipient not found");
+      if (!username) toast.error("You are not authenticated");
       return;
     }
 
-    socket.emit("join", recipient);
-    socket.on("message", (msg: Message) => addMessage(recipient, msg));
-    socket.on("typing", () => setIsTyping(true));
-  }, [socket, addMessage, closeSocket, recipient]);
+    // Function to attach event listeners
+    const attachListeners = () => {
+      socket.on("message", (msg: Message) => addMessage(recipient, msg));
+      socket.on("typing", () => setIsTyping(true));
+    };
+
+    // Initial attachment
+    attachListeners();
+
+    // Reattach listeners on reconnect
+    socket.on("reconnect", () => {
+      attachListeners();
+    });
+
+    return () => {
+      socket.off("message");
+      socket.off("typing");
+      socket.off("reconnect");
+    };
+  }, [socket, addMessage, closeSocket, recipient, username]);
 
   const sendMessage = (content: string) => {
     if (!socket) {
