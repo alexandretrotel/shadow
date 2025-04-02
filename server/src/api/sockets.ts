@@ -5,8 +5,13 @@ interface ConnectedUsers {
   [username: string]: string; // Maps username to socket.id
 }
 
+interface TypingTimeouts {
+  [username: string]: NodeJS.Timeout; // Maps username to timeout ID
+}
+
 export function setupSockets(io: Server) {
   const connectedUsers: ConnectedUsers = {}; // Store connected users and their socket IDs
+  const typingTimeouts: TypingTimeouts = {}; // Store typing timeouts
 
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
@@ -34,11 +39,23 @@ export function setupSockets(io: Server) {
     });
 
     // Handle user typing events
-    socket.on("typing", (data: { recipient: string; username: string }) => {
+    socket.on("typing", (data: { username: string; recipient: string }) => {
       const recipientSocketId = connectedUsers[data.recipient]; // Get recipient's socket ID
 
       if (recipientSocketId) {
+        // Clear any existing timeout for this user
+        if (typingTimeouts[data.username]) {
+          clearTimeout(typingTimeouts[data.username]);
+        }
+
+        // Emit typing event to the recipient
         io.to(recipientSocketId).emit("typing", data.username);
+
+        // Set a timeout to emit stopTyping after 2 seconds of inactivity
+        typingTimeouts[data.username] = setTimeout(() => {
+          io.to(recipientSocketId).emit("stopTyping", data.username);
+          delete typingTimeouts[data.username];
+        }, 2000); // 2 seconds of inactivity
       }
     });
 
@@ -63,6 +80,13 @@ export function setupSockets(io: Server) {
 
           // Broadcast updated online users list
           io.emit("onlineUsers", Object.keys(connectedUsers));
+
+          // Clear any existing typing timeout for this user
+          if (typingTimeouts[username]) {
+            clearTimeout(typingTimeouts[username]);
+            delete typingTimeouts[username];
+          }
+
           break;
         }
       }
