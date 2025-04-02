@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/store/auth.store";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
@@ -15,15 +7,39 @@ import { motion } from "motion/react";
 import { ThemeProvider } from "./providers/theme-provider";
 import { useInitializeSocket } from "./store/socket.store";
 import { cn } from "./lib/utils";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "./components/ui/input";
+import { Button } from "./components/ui/button";
+import { z } from "zod";
+
+const passwordSchema = z.object({
+  password: z.string().min(1, "Password is required"),
+});
+type FormSchema = z.infer<typeof passwordSchema>;
 
 export const Root = () => {
-  const [password, setPassword] = useState("");
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useInitializeSocket();
   const { username, loadAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const form = useForm({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      password: "",
+    },
+  });
 
   useEffect(() => {
     const encrypted = localStorage.getItem("auth-storage");
@@ -33,7 +49,9 @@ export const Root = () => {
     }
   }, [username]);
 
-  const handlePasswordSubmit = async () => {
+  const handlePasswordSubmit = async (data: FormSchema) => {
+    const { password } = data;
+
     try {
       await loadAuth(password);
       setIsPasswordModalOpen(false);
@@ -53,35 +71,55 @@ export const Root = () => {
         transition={{ duration: 0.5 }}
         className={cn(
           "bg-card text-foreground flex min-h-screen items-center justify-center antialiased",
-          !location.pathname.startsWith("/chat") ? "px-4 md:px-0" : "px-0",
-          isPasswordModalOpen && "blur-xl",
+          location.pathname.startsWith("/chat") && !isPasswordModalOpen
+            ? "px-0"
+            : "px-4 md:px-0",
         )}
       >
-        <Dialog
-          open={isPasswordModalOpen}
-          onOpenChange={setIsPasswordModalOpen}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Enter Password</DialogTitle>
-            </DialogHeader>
+        {isPasswordModalOpen ? (
+          <div className="flex h-screen w-screen items-center justify-center">
+            <div className="w-full max-w-md space-y-6">
+              <h1 className="text-xl font-bold">
+                The app is locked, you need to enter the password to unlock it!
+              </h1>
 
-            <div className="space-y-4">
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
-              />
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handlePasswordSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="Enter your password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <Button onClick={handlePasswordSubmit} className="w-full">
-                Submit
-              </Button>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={form.formState.isSubmitting}
+                  >
+                    {form.formState.isSubmitting ? "Unlocking..." : "Unlock"}
+                  </Button>
+                </form>
+              </Form>
             </div>
-          </DialogContent>
-        </Dialog>
-
-        <Outlet />
+          </div>
+        ) : (
+          <Outlet />
+        )}
         <Toaster />
       </motion.div>
     </ThemeProvider>

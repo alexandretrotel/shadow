@@ -18,6 +18,20 @@ import {
 import { SERVER_URL } from "@/lib/server";
 import { encode } from "@stablelib/base64";
 import { useAuth } from "@/store/auth.store";
+import { z } from "zod";
+
+const userSchema = z.object({
+  user: z.object({
+    username: z.string(),
+    publicKey: z.string(),
+    createdAt: z.union([
+      z
+        .string()
+        .transform((val) => new Date(val).toISOString() as unknown as Date),
+      z.date(),
+    ]),
+  }),
+});
 
 export const CreateAccountForm = () => {
   const { setAuth } = useAuth();
@@ -29,6 +43,28 @@ export const CreateAccountForm = () => {
 
   const onSubmit = async (data: CreateAccountFormSchema) => {
     try {
+      const usernameResponse = await fetch(
+        `${SERVER_URL}/user/${data.username}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!usernameResponse.ok) {
+        throw new Error("Error checking username");
+      }
+
+      const usernameData = await usernameResponse.json();
+      const { user } = userSchema.parse(usernameData);
+
+      if (user) {
+        toast.error("Username already exists");
+        return;
+      }
+
       const keyPair = generateKeyPair();
 
       const response = await fetch(`${SERVER_URL}/register`, {

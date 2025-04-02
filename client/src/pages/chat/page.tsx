@@ -7,6 +7,9 @@ import { useChat } from "@/store/chat.store";
 import { redirect, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/store/auth.store";
 import { debounce } from "lodash";
+import { decryptMessage, encryptMessage } from "@/lib/crypto";
+import { usePublicKey } from "@/hooks/use-public-key";
+import { decode } from "@stablelib/base64";
 
 export const Chat = () => {
   const { recipient } = useParams<{ recipient: string }>();
@@ -14,9 +17,14 @@ export const Chat = () => {
   const [isTyping, setIsTyping] = useState(false);
 
   const { socket, closeSocket } = useSocket();
-  const { username } = useAuth();
+  const { username, getKeyPair } = useAuth();
   const { messages, addMessage } = useChat();
   const navigate = useNavigate();
+  const recipientPublicKey = usePublicKey(recipient || "");
+
+  const keyPair = getKeyPair();
+  const privateKey = keyPair?.secretKey;
+  const publicKey = keyPair?.publicKey;
 
   const debouncedSendMessage = useMemo(
     () =>
@@ -27,16 +35,32 @@ export const Chat = () => {
           return;
         }
 
+        if (!recipientPublicKey) {
+          toast.error("Recipient public key not found");
+          return;
+        }
+
+        if (!privateKey) {
+          toast.error("Private key not found");
+          return;
+        }
+
+        const encryptedContent = encryptMessage(
+          content,
+          decode(recipientPublicKey),
+          privateKey,
+        );
+
         const message: Message = {
           sender: username,
-          content,
+          content: encryptedContent,
           messageId: crypto.randomUUID(),
           status: "sent",
         };
 
         socket.emit("message", { sender: username, recipient, message });
       }, 300),
-    [socket, username, recipient],
+    [socket, username, recipient, recipientPublicKey, privateKey],
   );
 
   const debouncedHandleTyping = useMemo(
@@ -104,16 +128,33 @@ export const Chat = () => {
     debouncedHandleTyping();
   };
 
-  if (!recipient || !username) {
+  if (!recipient || !username || !publicKey) {
     toast.error("Authentication or recipient issue");
     redirect("/");
     return null;
   }
 
+  const decryptedMessages =
+    messages[recipient]?.map((msg) => {
+      if (!privateKey || !recipientPublicKey) return msg;
+
+      try {
+        const decryptedContent = decryptMessage(
+          msg.content,
+          decode(recipientPublicKey),
+          privateKey,
+        );
+
+        return { ...msg, content: decryptedContent };
+      } catch {
+        return { ...msg, content: "[Decryption Failed]" };
+      }
+    }) || [];
+
   return (
     <ChatContainer
       recipient={recipient}
-      messages={messages[recipient]}
+      messages={decryptedMessages}
       onSend={handleSendMessage}
       onLeave={() => navigate("/")}
       isTyping={isTyping}
