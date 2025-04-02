@@ -35,13 +35,8 @@ export const Chat = () => {
           return;
         }
 
-        if (!recipientPublicKey) {
-          toast.error("Recipient public key not found");
-          return;
-        }
-
-        if (!privateKey) {
-          toast.error("Private key not found");
+        if (!recipientPublicKey || !privateKey) {
+          toast.error("Recipient public key or your private key is missing");
           return;
         }
 
@@ -92,6 +87,9 @@ export const Chat = () => {
       socket.off("stopTyping").on("stopTyping", () => {
         setIsTyping(false);
       });
+      socket.off("recipientOffline").on("recipientOffline", ({ recipient }) => {
+        toast.error(`Message could not be delivered. ${recipient} is offline.`);
+      });
     };
 
     // Initial attachment
@@ -107,6 +105,7 @@ export const Chat = () => {
       socket.off("typing");
       socket.off("stopTyping");
       socket.off("reconnect");
+      socket.off("recipientOffline");
       debouncedSendMessage.cancel();
       debouncedHandleTyping.cancel();
     };

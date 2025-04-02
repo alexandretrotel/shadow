@@ -32,7 +32,7 @@ export function setupSockets(io: Server) {
         const senderSocketId = connectedUsers[data.sender]; // Get sender's socket ID
         const recipientSocketId = connectedUsers[data.recipient]; // Get recipient's socket ID
 
-        if (recipientSocketId) {
+        if (senderSocketId) {
           // Confirm the message was sent to the sender
           io.to(senderSocketId).emit("message", {
             ...data.message,
@@ -40,11 +40,17 @@ export function setupSockets(io: Server) {
           });
         }
 
-        if (senderSocketId) {
+        if (recipientSocketId) {
           // Send the message to the recipient
           io.to(recipientSocketId).emit("message", {
             ...data.message,
             status: "received",
+          });
+        } else {
+          // Notify the sender that the recipient is offline
+          io.to(senderSocketId).emit("recipientOffline", {
+            recipient: data.recipient,
+            messageId: data.message.messageId,
           });
         }
       }
