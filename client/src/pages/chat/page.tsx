@@ -34,7 +34,7 @@ export const Chat = () => {
           status: "sent",
         };
 
-        socket.emit("message", { username, message });
+        socket.emit("message", { sender: username, recipient, message });
         addMessage(recipient, message);
       }, 300),
     [socket, username, recipient, addMessage],
@@ -47,7 +47,7 @@ export const Chat = () => {
           toast.error("Connection or authentication issue");
           return;
         }
-        socket.emit("typing", { recipient, username });
+        socket.emit("typing", { sender: username, recipient });
       }, 500),
     [socket, username, recipient],
   );

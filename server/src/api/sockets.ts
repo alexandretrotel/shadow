@@ -26,41 +26,45 @@ export function setupSockets(io: Server) {
     });
 
     // Handle user messages
-    socket.on("message", (data: { username: string; message: Message }) => {
-      const usernameSocketId = connectedUsers[data.username]; // Get sender's socket ID
+    socket.on(
+      "message",
+      (data: { sender: string; recipient: string; message: Message }) => {
+        const senderSocketId = connectedUsers[data.sender]; // Get sender's socket ID
+        const recipientSocketId = connectedUsers[data.recipient]; // Get recipient's socket ID
 
-      if (usernameSocketId) {
-        // Send the message to the recipient
-        io.to(usernameSocketId).emit("message", {
-          ...data.message,
-          status: "delivered",
-        });
+        if (recipientSocketId) {
+          // Confirm the message was sent to the sender
+          io.to(senderSocketId).emit("message", {
+            ...data.message,
+            status: "delivered",
+          });
+        }
       }
-    });
+    );
 
     // Handle user typing events
-    socket.on("typing", (data: { username: string; recipient: string }) => {
+    socket.on("typing", (data: { sender: string; recipient: string }) => {
       const recipientSocketId = connectedUsers[data.recipient]; // Get recipient's socket ID
 
       if (recipientSocketId) {
         // Clear any existing timeout for this user
-        if (typingTimeouts[data.username]) {
-          clearTimeout(typingTimeouts[data.username]);
+        if (typingTimeouts[data.sender]) {
+          clearTimeout(typingTimeouts[data.sender]);
         }
 
         // Emit typing event to the recipient
-        io.to(recipientSocketId).emit("typing", data.username);
+        io.to(recipientSocketId).emit("typing", data.sender);
 
         // Set a timeout to emit stopTyping after 2 seconds of inactivity
-        typingTimeouts[data.username] = setTimeout(() => {
-          io.to(recipientSocketId).emit("stopTyping", data.username);
-          delete typingTimeouts[data.username];
+        typingTimeouts[data.sender] = setTimeout(() => {
+          io.to(recipientSocketId).emit("stopTyping", data.sender);
+          delete typingTimeouts[data.sender];
         }, 2000); // 2 seconds of inactivity
       }
     });
 
     // Handle reading events
-    socket.on("read", (data: { messageId: string; sender: string }) => {
+    socket.on("read", (data: { sender: string; messageId: string }) => {
       const senderSocketId = connectedUsers[data.sender]; // Get sender's socket ID
 
       if (senderSocketId) {
