@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChatContainer } from "@/components/chat/chat-container";
 import { Message } from "@/lib/types";
 import { useSocket } from "@/store/socket.store";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useChat } from "@/store/chat.store";
 import { redirect, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/store/auth.store";
+import { debounce } from "lodash";
 
 export const Chat = () => {
   const { recipient } = useParams<{ recipient: string }>();
@@ -17,6 +18,40 @@ export const Chat = () => {
   const { messages, addMessage } = useChat();
   const navigate = useNavigate();
 
+  const debouncedSendMessage = useMemo(
+    () =>
+      debounce((content: string) => {
+        if (!socket || !username || !recipient) {
+          toast.error("Connection or authentication issue");
+          redirect("/");
+          return;
+        }
+
+        const message: Message = {
+          sender: username,
+          content,
+          messageId: crypto.randomUUID(),
+          status: "sent",
+        };
+
+        socket.emit("message", { recipient, message });
+        addMessage(recipient, message);
+      }, 300),
+    [socket, username, recipient, addMessage],
+  );
+
+  const debouncedHandleTyping = useMemo(
+    () =>
+      debounce(() => {
+        if (!socket || !username || !recipient) {
+          toast.error("Connection or authentication issue");
+          return;
+        }
+        socket.emit("typing", { recipient, username });
+      }, 500),
+    [socket, username, recipient],
+  );
+
   useEffect(() => {
     if (!socket || !recipient || !username) {
       if (!socket) toast.error("Not connected to the server");
@@ -27,8 +62,13 @@ export const Chat = () => {
 
     // Function to attach event listeners
     const attachListeners = () => {
-      socket.on("message", (msg: Message) => addMessage(recipient, msg));
-      socket.on("typing", () => setIsTyping(true));
+      socket
+        .off("message")
+        .on("message", (msg: Message) => addMessage(recipient, msg));
+      socket.off("typing").on("typing", () => setIsTyping(true));
+      socket.off("stopTyping").on("stopTyping", () => {
+        setIsTyping(false);
+      });
     };
 
     // Initial attachment
@@ -42,66 +82,31 @@ export const Chat = () => {
     return () => {
       socket.off("message");
       socket.off("typing");
+      socket.off("stopTyping");
       socket.off("reconnect");
+      debouncedSendMessage.cancel();
+      debouncedHandleTyping.cancel();
     };
-  }, [socket, addMessage, closeSocket, recipient, username]);
+  }, [
+    socket,
+    addMessage,
+    closeSocket,
+    recipient,
+    username,
+    debouncedSendMessage,
+    debouncedHandleTyping,
+  ]);
 
-  const sendMessage = (content: string) => {
-    if (!socket) {
-      toast.error("You are not connected to the server");
-      return;
-    }
-
-    if (!username) {
-      toast.error("You are not authenticated");
-      redirect("/");
-      return;
-    }
-
-    if (!recipient) {
-      toast.error("Recipient not found");
-      return;
-    }
-
-    const message: Message = {
-      sender: username,
-      content,
-      messageId: Date.now().toString(),
-      status: "sent",
-    };
-
-    socket.emit("message", { recipient, message });
-
-    addMessage(recipient, message);
+  const handleSendMessage = (content: string) => {
+    debouncedSendMessage(content);
   };
 
   const handleTyping = () => {
-    if (!socket) {
-      toast.error("You are not connected to the server");
-      return;
-    }
-
-    if (!recipient) {
-      toast.error("Recipient not found");
-      return;
-    }
-
-    if (!username) {
-      toast.error("You are not authenticated");
-      redirect("/");
-      return;
-    }
-
-    socket.emit("typing", { recipient, username });
+    debouncedHandleTyping();
   };
 
-  if (!recipient) {
-    redirect("/");
-    return null;
-  }
-
-  if (!username) {
-    toast.error("You are not authenticated");
+  if (!recipient || !username) {
+    toast.error("Authentication or recipient issue");
     redirect("/");
     return null;
   }
@@ -110,7 +115,7 @@ export const Chat = () => {
     <ChatContainer
       recipient={recipient}
       messages={messages[recipient]}
-      onSend={sendMessage}
+      onSend={handleSendMessage}
       onLeave={() => navigate("/")}
       isTyping={isTyping}
       sendTyping={handleTyping}
