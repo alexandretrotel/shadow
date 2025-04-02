@@ -10,6 +10,7 @@ import { publicKeySchema } from "@/lib/schemas";
 import { decode } from "@stablelib/base64";
 import { VerifyQR } from "./verify-qr";
 import { featureFlags } from "@/lib/features";
+import { useOnline } from "@/store/online.store";
 
 interface ChatHeaderProps {
   recipient: string;
@@ -21,6 +22,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
     null,
   );
 
+  const { isOnline } = useOnline();
   const { clearMessages } = useChat();
 
   useEffect(() => {
@@ -67,6 +69,19 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
           <CardTitle className="text-secondary-foreground text-lg tracking-wide">
             {recipient}
           </CardTitle>
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`h-2 w-2 rounded-full ${
+                isOnline(recipient)
+                  ? "animate-pulse bg-green-500"
+                  : "bg-gray-500"
+              }`}
+            />
+            <span className="text-muted-foreground text-sm">
+              {isOnline(recipient) ? "Online" : "Offline"}
+            </span>
+          </div>
 
           <motion.span
             key={recipient}

@@ -13,11 +13,13 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "motion/react";
 import { ThemeProvider } from "./providers/theme-provider";
+import { useInitializeSocket } from "./store/socket.store";
 
 export const Root = () => {
   const [password, setPassword] = useState("");
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
+  useInitializeSocket();
   const { username, loadAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

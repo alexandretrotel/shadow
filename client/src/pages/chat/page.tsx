@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChatContainer } from "@/components/chat/chat-container";
 import { Message } from "@/lib/types";
-import { useInitializeSocket, useSocket } from "@/store/socket.store";
+import { useSocket } from "@/store/socket.store";
 import { toast } from "sonner";
 import { useChat } from "@/store/chat.store";
 import { redirect, useNavigate, useParams } from "react-router-dom";
@@ -12,18 +12,13 @@ export const Chat = () => {
 
   const [isTyping, setIsTyping] = useState(false);
 
-  useInitializeSocket();
   const { socket, closeSocket } = useSocket();
   const { username } = useAuth();
   const { messages, addMessage } = useChat();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!socket) {
-      return;
-    } else {
-      toast.success("Connected to the server");
-    }
+    if (!socket) return;
 
     if (!recipient) {
       toast.error("Recipient not found");
@@ -33,10 +28,6 @@ export const Chat = () => {
     socket.emit("join", recipient);
     socket.on("message", (msg: Message) => addMessage(recipient, msg));
     socket.on("typing", () => setIsTyping(true));
-
-    return () => {
-      closeSocket();
-    };
   }, [socket, addMessage, closeSocket, recipient]);
 
   const sendMessage = (content: string) => {

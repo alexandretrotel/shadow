@@ -12,10 +12,11 @@ interface SocketStore {
   initialize: () => void;
 }
 
-export const useSocket = create<SocketStore>((set) => ({
+export const useSocket = create<SocketStore>((set, get) => ({
   socket: null,
   setSocket: (socket) => set({ socket }),
   closeSocket: () => {
+    get().socket?.disconnect();
     set({ socket: null });
   },
   initialize: () => {
@@ -31,7 +32,7 @@ export const useSocket = create<SocketStore>((set) => ({
 }));
 
 export const useInitializeSocket = () => {
-  const { initialize, socket } = useSocket.getState();
+  const { initialize, socket, closeSocket } = useSocket.getState();
   const { username } = useAuth();
 
   useEffect(() => {
@@ -39,14 +40,16 @@ export const useInitializeSocket = () => {
 
     initialize();
 
-    if (socket && username) {
-      socket.emit("register", username); // Register the user on connect
-    }
+    socket?.on("connect", () => {
+      if (username) {
+        socket.emit("register", username); // Register the user on connect
+      }
+    });
 
     return () => {
       if (socket) {
-        socket.disconnect();
+        closeSocket();
       }
     };
-  }, [initialize, socket, username]);
+  }, [closeSocket, initialize, socket, username]);
 };
