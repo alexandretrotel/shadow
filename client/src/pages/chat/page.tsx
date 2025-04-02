@@ -92,9 +92,6 @@ export const Chat = () => {
       socket.off("stopTyping").on("stopTyping", () => {
         setIsTyping(false);
       });
-      socket.off("messageRead").on("messageRead", ({ messageId, status }) => {
-        updateMessageStatus(recipient, messageId, status);
-      });
     };
 
     // Initial attachment
@@ -110,7 +107,6 @@ export const Chat = () => {
       socket.off("typing");
       socket.off("stopTyping");
       socket.off("reconnect");
-      socket.off("messageRead");
       debouncedSendMessage.cancel();
       debouncedHandleTyping.cancel();
     };
