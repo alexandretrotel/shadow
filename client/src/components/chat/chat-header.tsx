@@ -68,9 +68,18 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
         <div className="flex items-center gap-4">
           <CardTitle className="text-secondary-foreground text-lg tracking-wide">
             {recipient}
+            <div className="ml-2 md:hidden">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  isOnline(recipient)
+                    ? "animate-pulse bg-green-500"
+                    : "bg-gray-500"
+                }`}
+              />
+            </div>
           </CardTitle>
 
-          <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 md:flex">
             <span
               className={`h-2 w-2 rounded-full ${
                 isOnline(recipient)
