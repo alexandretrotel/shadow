@@ -1,5 +1,5 @@
 import type { Server } from "socket.io";
-import type { Message } from "../../common/src/types";
+import type { Message } from "../lib/types";
 
 interface ConnectedUsers {
   [username: string]: string; // Maps username to socket.id
@@ -15,6 +15,9 @@ export function setupSockets(io: Server) {
     socket.on("register", (username: string) => {
       connectedUsers[username] = socket.id;
       console.log(`User registered: ${username} with socket ID: ${socket.id}`);
+
+      // Broadcast updated online users list
+      io.emit("onlineUsers", Object.keys(connectedUsers));
     });
 
     // Handle user messages
@@ -57,6 +60,9 @@ export function setupSockets(io: Server) {
         if (connectedUsers[username] === socket.id) {
           delete connectedUsers[username];
           console.log(`User ${username} removed from connected users.`);
+
+          // Broadcast updated online users list
+          io.emit("onlineUsers", Object.keys(connectedUsers));
           break;
         }
       }
