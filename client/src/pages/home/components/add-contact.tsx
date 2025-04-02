@@ -15,9 +15,11 @@ import { SERVER_URL } from "@/lib/server";
 import { getKeyFingerprint } from "@/lib/crypto";
 import { decode } from "@stablelib/base64";
 import { publicKeySchema } from "@/lib/schemas";
+import { useAuth } from "@/store/auth.store";
 
 export const AddContact = () => {
   const { addContact, isInContacts } = useContacts();
+  const { username } = useAuth();
 
   const contactForm = useForm({
     defaultValues: {
@@ -27,6 +29,11 @@ export const AddContact = () => {
 
   const handleAddContact = async (data: { contact: string }) => {
     const contact = data.contact.trim();
+
+    if (contact === username) {
+      toast.error("You cannot add yourself as a contact");
+      return;
+    }
 
     if (isInContacts(contact)) {
       toast.error("Contact already exists");

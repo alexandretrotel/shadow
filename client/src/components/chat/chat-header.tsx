@@ -100,7 +100,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
             onClick={() => clearMessages(recipient)}
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hidden md:inline-flex"
+            className="text-muted-foreground hidden sm:inline-flex"
           >
             Clear Chat
           </Button>
