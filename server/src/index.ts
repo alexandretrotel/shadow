@@ -10,7 +10,10 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? "https://shadow.alexandretrotel.org"
+        ? [
+            "https://shadow.alexandretrotel.org",
+            "https://shadow-*-alexandretrotel.vercel.app",
+          ]
         : "*",
   })
 );
@@ -21,7 +24,10 @@ const io = new Server(server, {
   cors: {
     origin:
       process.env.NODE_ENV === "production"
-        ? "https://shadow.alexandretrotel.org"
+        ? [
+            "https://shadow.alexandretrotel.org",
+            "https://shadow-*-alexandretrotel.vercel.app",
+          ]
         : "*",
   },
 });
