@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CardHeader, CardTitle } from "@/components/ui/card";
+import { CardHeader } from "@/components/ui/card";
 import { SERVER_URL } from "@/lib/server";
 import { useChat } from "@/store/chat.store";
 import { getKeyFingerprint } from "@/lib/crypto";
@@ -21,7 +21,6 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
   const [recipientPublicKey, setRecipientPublicKey] = useState<string | null>(
     null,
   );
-
   const { isOnline } = useOnline();
   const { clearMessages } = useChat();
 
@@ -30,14 +29,10 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
       try {
         const response = await fetch(`${SERVER_URL}/public-key/${recipient}`, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch public key");
-        }
+        if (!response.ok) throw new Error("Failed to fetch public key");
 
         const data = await response.json();
         const { publicKey } = publicKeySchema.parse(data);
@@ -62,66 +57,67 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
     fetchRecipientPublicKey();
   }, [recipient]);
 
-  return (
-    <CardHeader className="border-muted chat-header-bar flex-shrink-0 border-b">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <CardTitle className="text-secondary-foreground text-lg tracking-wide">
-            {recipient}
-          </CardTitle>
+  const fingerprint = recipientPublicKey
+    ? getKeyFingerprint(decode(recipientPublicKey))
+    : "Loading...";
 
+  return (
+    <CardHeader className="border-muted flex-shrink-0 border-b px-4 py-6">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="flex items-center gap-2">
             <span
               className={`h-2 w-2 rounded-full ${
                 isOnline(recipient)
                   ? "animate-pulse bg-green-500"
-                  : "bg-gray-500"
+                  : "bg-gray-400"
               }`}
             />
-            <span className="text-muted-foreground text-sm">
-              {isOnline(recipient) ? "Online" : "Offline"}
-            </span>
+            <h2 className="text-secondary-foreground truncate text-lg font-medium">
+              {recipient}
+            </h2>
           </div>
 
-          <motion.span
+          <motion.div
             key={recipient}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="bg-muted text-muted-foreground hover:text-foreground rounded border px-2 py-1 font-mono text-xs"
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="hidden md:block"
           >
-            <span className="transition-all duration-400 hover:blur-none md:blur-xs">
-              {getKeyFingerprint(decode(recipientPublicKey || ""))}
+            <span className="bg-muted text-muted-foreground hover:text-foreground rounded-md px-2 py-1 font-mono text-xs transition-all">
+              {fingerprint}
             </span>
-          </motion.span>
+          </motion.div>
         </div>
-        <motion.div transition={{ duration: 0.2 }} className="flex gap-2">
+
+        <div className="flex items-center gap-2">
+          {recipientPublicKey && featureFlags.enableVerifyQRCode && (
+            <VerifyQR
+              recipient={recipient}
+              recipientPublicKey={recipientPublicKey}
+            />
+          )}
+
           <Button
             onClick={() => clearMessages(recipient)}
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="text-muted-foreground hidden sm:inline-flex"
+            className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
-            Clear Chat
+            Clear
           </Button>
 
           <Button
             onClick={onLeave}
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="text-muted-foreground"
+            className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             Leave
           </Button>
-        </motion.div>
+        </div>
       </div>
-
-      {recipientPublicKey && featureFlags.enableVerifyQRCode && (
-        <VerifyQR
-          recipient={recipient}
-          recipientPublicKey={recipientPublicKey}
-        />
-      )}
     </CardHeader>
   );
 };
