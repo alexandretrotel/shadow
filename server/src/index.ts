@@ -9,7 +9,7 @@ const app = express();
 app.use(
   cors({
     origin:
-      process.env.NODE_ENV === "production"
+      process.env.SHADOW_ENV === "production"
         ? "https://shadow.alexandretrotel.org"
         : "*",
   })
@@ -20,7 +20,7 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin:
-      process.env.NODE_ENV === "production"
+      process.env.SHADOW_ENV === "production"
         ? "https://shadow.alexandretrotel.org"
         : "*",
   },
