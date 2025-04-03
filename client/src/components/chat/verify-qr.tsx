@@ -51,7 +51,7 @@ export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
       if (data.fingerprint !== calculatedFingerprint) {
         toast.error("Public key fingerprint does not match!");
       } else {
-        toast.success("Public key verified successfully!");
+        toast.success("Public key verified successfully! You're safe to chat.");
         setIsOpen(false);
         setQrData(null);
       }
@@ -95,6 +95,9 @@ export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
               scanDelay={300}
               constraints={{
                 facingMode: "environment",
+              }}
+              components={{
+                audio: false,
               }}
             />
           </div>
