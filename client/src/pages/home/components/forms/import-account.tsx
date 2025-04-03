@@ -73,7 +73,11 @@ export const ImportAccountForm = () => {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="Paste your private key" {...field} />
+                <Input
+                  type="password"
+                  placeholder="Paste your private key"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
