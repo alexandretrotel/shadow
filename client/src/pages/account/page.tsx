@@ -17,6 +17,7 @@ export const Account = () => {
   const [copiedPrivate, setCopiedPrivate] = useState(false);
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [privateKey, setPrivateKey] = useState<string | null>(null);
+  const [fingerprint, setFingerprint] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const { username, keyPair } = useAuth();
@@ -25,14 +26,18 @@ export const Account = () => {
     if (keyPair && username) {
       const encodedPublicKey = encode(keyPair.publicKey || new Uint8Array());
       const encodedPrivateKey = encode(keyPair.secretKey || new Uint8Array());
-      const fingerprint = getKeyFingerprint(keyPair.publicKey);
+      const publicKeyFingerprint = getKeyFingerprint(keyPair.publicKey);
 
       setPublicKey(encodedPublicKey);
       setPrivateKey(encodedPrivateKey);
+      setFingerprint(publicKeyFingerprint);
 
       const generateQR = async () => {
         const QRCode = await import("qrcode");
-        const qrData = JSON.stringify({ username, fingerprint });
+        const qrData = JSON.stringify({
+          username,
+          fingerprint: publicKeyFingerprint,
+        });
         const dataUrl = await QRCode.toDataURL(qrData);
         setQrCode(dataUrl);
       };
@@ -70,14 +75,19 @@ export const Account = () => {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        <AccountIdentity username={username} />
-        <KeyDisplay
-          label="Public Key"
-          keyValue={publicKey || "Loading..."}
-          copied={copiedPublic}
-          onCopy={() => publicKey && handleCopy(publicKey, "public")}
-        />
+        <AccountIdentity username={username} fingerprint={fingerprint} />
+
+        <div className="space-y-2">
+          <KeyDisplay
+            label="Public Key"
+            keyValue={publicKey || "Loading..."}
+            copied={copiedPublic}
+            onCopy={() => publicKey && handleCopy(publicKey, "public")}
+          />
+        </div>
+
         <QRCodeDisplay qrCode={qrCode} />
+
         <KeyDisplay
           label="Private Key"
           keyValue={privateKey ? "Copy Private Key (Keep Safe!)" : "Loading..."}
@@ -85,6 +95,7 @@ export const Account = () => {
           onCopy={() => privateKey && handleCopy(privateKey, "private")}
           isPrivate
         />
+
         <Button
           variant="ghost"
           className="mt-6 w-full py-3"
