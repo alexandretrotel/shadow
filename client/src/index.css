@@ -140,3 +140,11 @@ html {
 .chat-header-bar {
   padding-top: calc(env(safe-area-inset-top, 0) + 24px);
 }
+
+.pwa-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.pwa-top {
+  padding-top: env(safe-area-inset-top, 0);
+}

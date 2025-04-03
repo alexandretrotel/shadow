@@ -71,7 +71,8 @@ export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
           Verify
         </Button>
       </DrawerTrigger>
-      <DrawerContent>
+
+      <DrawerContent className="pwa-bottom">
         <DrawerHeader>
           <DrawerTitle>Verify {recipient}'s Public Key</DrawerTitle>
           <DrawerDescription>
