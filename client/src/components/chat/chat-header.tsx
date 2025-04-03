@@ -62,7 +62,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
     : "Loading...";
 
   return (
-    <CardHeader className="border-muted flex-shrink-0 border-b px-4 py-6">
+    <CardHeader className="border-muted chat-header-bar flex-shrink-0 border-b px-4 py-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex items-center gap-2">
