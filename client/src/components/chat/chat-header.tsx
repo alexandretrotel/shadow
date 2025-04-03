@@ -63,7 +63,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
   }, [recipient]);
 
   return (
-    <CardHeader className="border-muted flex-shrink-0 border-b pt-6">
+    <CardHeader className="border-muted chat-header-bar flex-shrink-0 border-b">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <CardTitle className="text-secondary-foreground text-lg tracking-wide">
