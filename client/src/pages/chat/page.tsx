@@ -20,7 +20,7 @@ export const Chat = () => {
   const { username, getKeyPair } = useAuth();
   const { messages, addMessage, updateMessageStatus } = useChat();
   const navigate = useNavigate();
-  const recipientPublicKey = usePublicKey(recipient || "");
+  const recipientPublicKey = usePublicKey(recipient);
 
   const keyPair = getKeyPair();
   const privateKey = keyPair?.secretKey;
@@ -136,7 +136,9 @@ export const Chat = () => {
 
   const decryptedMessages =
     messages[recipient]?.map((msg) => {
-      if (!privateKey || !recipientPublicKey) return msg;
+      if (!privateKey || !recipientPublicKey) {
+        return msg;
+      }
 
       try {
         const decryptedContent = decryptMessage(

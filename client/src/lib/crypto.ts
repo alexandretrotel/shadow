@@ -26,9 +26,11 @@ export const encryptMessage = (
     recipientPublicKey,
     secretKey,
   );
+
   const fullMessage = new Uint8Array(nonce.length + encrypted.length);
   fullMessage.set(nonce);
   fullMessage.set(encrypted, nonce.length);
+
   return encode(fullMessage);
 };
 
@@ -47,12 +49,14 @@ export const decryptMessage = (
   const encrypted = decode(encryptedContent);
   const nonce = encrypted.slice(0, nacl.box.nonceLength);
   const ciphertext = encrypted.slice(nacl.box.nonceLength);
+
   const decrypted = nacl.box.open(
     ciphertext,
     nonce,
     senderPublicKey,
     secretKey,
   );
+
   return decrypted ? new TextDecoder().decode(decrypted) : "Decryption failed";
 };
 

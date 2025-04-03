@@ -131,3 +131,8 @@ html {
     @apply transition-colors duration-200;
   }
 }
+
+/* PWA styles */
+.chat-bottom-bar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
