@@ -56,10 +56,9 @@ export const Root = () => {
       await loadAuth(password);
       setIsPasswordModalOpen(false);
 
-      toast.success("Authentication loaded successfully");
       navigate("/");
     } catch {
-      toast.error("Incorrect password or failed to load authentication");
+      toast.error("Incorrect password");
     }
   };
 
