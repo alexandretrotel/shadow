@@ -24,8 +24,8 @@ export const MessageList = ({
   }, [messages]);
 
   return (
-    <CardContent className="flex flex-grow flex-col p-0">
-      <div className="bg-muted flex-grow overflow-y-auto p-4">
+    <CardContent className="flex flex-grow flex-col overflow-y-auto p-0">
+      <div className="bg-muted p-4">
         <AnimatePresence>
           {messages?.map((msg) => {
             if (!msg) return null;
