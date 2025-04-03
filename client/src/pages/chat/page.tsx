@@ -43,7 +43,7 @@ export const Chat = () => {
         const encryptedContent = encryptMessage(
           content,
           decode(recipientPublicKey),
-          new Uint8Array(privateKey),
+          privateKey,
         );
 
         const message: Message = {
@@ -136,13 +136,15 @@ export const Chat = () => {
 
   const decryptedMessages =
     messages[recipient]?.map((msg) => {
-      if (!privateKey || !recipientPublicKey) return msg;
+      if (!privateKey || !recipientPublicKey) {
+        return msg;
+      }
 
       try {
         const decryptedContent = decryptMessage(
           msg.content,
           decode(recipientPublicKey),
-          new Uint8Array(privateKey),
+          privateKey,
         );
 
         return { ...msg, content: decryptedContent };
