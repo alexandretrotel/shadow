@@ -93,10 +93,12 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
 
         <div className="flex items-center gap-2">
           {recipientPublicKey && featureFlags.enableVerifyQRCode && (
-            <VerifyQR
-              recipient={recipient}
-              recipientPublicKey={recipientPublicKey}
-            />
+            <div className="md:hidden">
+              <VerifyQR
+                recipient={recipient}
+                recipientPublicKey={recipientPublicKey}
+              />
+            </div>
           )}
 
           <Button

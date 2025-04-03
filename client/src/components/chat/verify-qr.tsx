@@ -12,7 +12,6 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Scanner } from "@yudiel/react-qr-scanner";
 
 interface VerifyQRProps {
@@ -23,8 +22,6 @@ interface VerifyQRProps {
 export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
   const [qrData, setQrData] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-
-  const isMobile = useIsMobile();
 
   const handleScan = (data: string | null) => {
     if (data) {
@@ -62,10 +59,6 @@ export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
       toast.error("Invalid QR data format");
     }
   };
-
-  if (!isMobile) {
-    return null;
-  }
 
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
