@@ -134,5 +134,9 @@ html {
 
 /* PWA styles */
 .chat-bottom-bar {
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.chat-header-bar {
+  padding-top: calc(env(safe-area-inset-top, 0) + 24px);
 }
