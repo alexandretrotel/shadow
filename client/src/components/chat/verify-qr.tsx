@@ -1,6 +1,6 @@
 import { getKeyFingerprint } from "@/lib/crypto";
 import { decode } from "@stablelib/base64";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Drawer,
@@ -12,7 +12,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { QrReader } from "react-qr-reader";
+import { BrowserQRCodeReader } from "@zxing/browser";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface VerifyQRProps {
@@ -24,13 +24,56 @@ export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
   const [qrData, setQrData] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const codeReader = useRef(new BrowserQRCodeReader());
+
   const isMobile = useIsMobile();
 
-  const handleScan = (data: string | null) => {
-    if (data) {
-      setQrData(data);
+  const startScan = useCallback(async () => {
+    try {
+      const videoElement = videoRef.current;
+      if (!videoElement) return;
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+
+      videoElement.srcObject = stream;
+      videoElement.play();
+
+      codeReader.current.decodeFromVideoElement(videoElement, (result, err) => {
+        if (result) {
+          setQrData(result.getText());
+          stopScan();
+        }
+
+        if (err) {
+          throw err;
+        }
+      });
+    } catch {
+      toast.error("Unable to access camera");
+    }
+  }, []);
+
+  const stopScan = () => {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
   };
+
+  useEffect(() => {
+    if (isOpen && videoRef.current) {
+      startScan();
+    }
+
+    return () => stopScan();
+  }, [isOpen, startScan]);
 
   const handleVerify = () => {
     if (!qrData) {
@@ -87,19 +130,7 @@ export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
 
         <div className="px-4 py-6">
           <div className="mx-auto max-w-[300px]">
-            <QrReader
-              onResult={(result: unknown) => {
-                if (result && typeof result === "object") {
-                  const { result: resultData } = result as {
-                    result: { text: string };
-                  };
-
-                  handleScan(resultData.text);
-                }
-              }}
-              constraints={{ facingMode: "environment" }}
-              className="w-full rounded-lg border border-gray-200"
-            />
+            <video ref={videoRef} className="w-full rounded-lg border" />
           </div>
 
           {qrData && (
