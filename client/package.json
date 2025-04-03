@@ -42,7 +42,7 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@stablelib/base64": "^2.0.1",
     "@tailwindcss/vite": "^4.0.17",
-    "@zxing/library": "^0.21.3",
+    "@yudiel/react-qr-scanner": "^2.2.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

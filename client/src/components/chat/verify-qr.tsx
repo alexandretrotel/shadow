@@ -1,6 +1,6 @@
 import { getKeyFingerprint } from "@/lib/crypto";
 import { decode } from "@stablelib/base64";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   Drawer,
@@ -12,8 +12,8 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { BrowserQRCodeReader } from "@zxing/browser";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Scanner } from "@yudiel/react-qr-scanner";
 
 interface VerifyQRProps {
   recipient: string;
@@ -23,57 +23,16 @@ interface VerifyQRProps {
 export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
   const [qrData, setQrData] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const codeReader = useRef(new BrowserQRCodeReader());
+  const [isScanning, setIsScanning] = useState(false);
 
   const isMobile = useIsMobile();
 
-  const startScan = useCallback(async () => {
-    try {
-      const videoElement = videoRef.current;
-      if (!videoElement) return;
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-
-      videoElement.srcObject = stream;
-      videoElement.play();
-
-      codeReader.current.decodeFromVideoElement(videoElement, (result, err) => {
-        if (result) {
-          setQrData(result.getText());
-          stopScan();
-        }
-
-        if (err) {
-          throw err;
-        }
-      });
-    } catch {
-      toast.error("Unable to access camera");
-    }
-  }, []);
-
-  const stopScan = () => {
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => track.stop());
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
+  const handleScan = (data: string | null) => {
+    if (data) {
+      setQrData(data);
+      setIsScanning(false);
     }
   };
-
-  useEffect(() => {
-    if (isOpen && videoRef.current) {
-      startScan();
-    }
-
-    return () => stopScan();
-  }, [isOpen, startScan]);
 
   const handleVerify = () => {
     if (!qrData) {
@@ -99,6 +58,7 @@ export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
       } else {
         toast.success("Public key verified successfully!");
         setIsOpen(false);
+        setQrData(null);
       }
     } catch {
       toast.error("Invalid QR data format");
@@ -129,23 +89,44 @@ export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
         </DrawerHeader>
 
         <div className="px-4 py-6">
-          <div className="mx-auto max-w-[300px]">
-            <video ref={videoRef} className="w-full rounded-lg border" />
+          <div className="mx-auto max-w-[300px] overflow-hidden rounded-lg border border-gray-200">
+            <Scanner
+              onScan={(detectedCodes) => {
+                if (detectedCodes.length > 0) {
+                  const code = detectedCodes[0];
+                  handleScan(code.rawValue);
+                  setIsScanning(true);
+                }
+              }}
+              onError={(error) => {
+                console.error("QR Scan Error:", error);
+                setIsScanning(false);
+              }}
+              classNames={{
+                container: "w-full h-full",
+                video: "w-full h-full",
+              }}
+              scanDelay={300}
+              constraints={{
+                facingMode: "environment",
+              }}
+            />
           </div>
-
-          {qrData && (
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">Scanned data detected</p>
-            </div>
-          )}
         </div>
 
         <DrawerFooter className="grid grid-cols-2 gap-4 md:mx-auto">
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setIsOpen(false);
+              setIsScanning(false);
+              setQrData(null);
+            }}
+          >
             Cancel
           </Button>
 
-          <Button onClick={handleVerify} disabled={!qrData}>
+          <Button onClick={handleVerify} disabled={!qrData || isScanning}>
             Verify QR Code
           </Button>
         </DrawerFooter>
