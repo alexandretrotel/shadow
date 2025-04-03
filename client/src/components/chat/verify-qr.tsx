@@ -23,14 +23,12 @@ interface VerifyQRProps {
 export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
   const [qrData, setQrData] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
 
   const isMobile = useIsMobile();
 
   const handleScan = (data: string | null) => {
     if (data) {
       setQrData(data);
-      setIsScanning(false);
     }
   };
 
@@ -95,12 +93,7 @@ export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
                 if (detectedCodes.length > 0) {
                   const code = detectedCodes[0];
                   handleScan(code.rawValue);
-                  setIsScanning(true);
                 }
-              }}
-              onError={(error) => {
-                console.error("QR Scan Error:", error);
-                setIsScanning(false);
               }}
               classNames={{
                 container: "w-full h-full",
@@ -119,14 +112,13 @@ export const VerifyQR = ({ recipient, recipientPublicKey }: VerifyQRProps) => {
             variant="outline"
             onClick={() => {
               setIsOpen(false);
-              setIsScanning(false);
               setQrData(null);
             }}
           >
             Cancel
           </Button>
 
-          <Button onClick={handleVerify} disabled={!qrData || isScanning}>
+          <Button onClick={handleVerify} disabled={!qrData}>
             Verify QR Code
           </Button>
         </DrawerFooter>
