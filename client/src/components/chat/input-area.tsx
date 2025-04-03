@@ -77,89 +77,94 @@ export const InputArea = ({ onSend, sendTyping }: InputAreaProps) => {
   };
 
   return (
-    <form
-      onSubmit={handleSend}
-      className="border-muted flex flex-shrink-0 flex-col gap-2 border-t p-4"
-    >
-      {file && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
-          className="bg-muted flex items-center gap-2 rounded p-2"
-        >
-          <span className="text-foreground truncate text-sm">
-            📎 {file.name}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setFile(null)}
-            className="p-1"
+    <div className="border-muted chat-bottom-bar flex flex-shrink-0 flex-col gap-2 border-t p-4">
+      <form onSubmit={handleSend}>
+        {file && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="bg-muted flex items-center gap-2 rounded p-2"
           >
-            <XIcon className="size-4" />
-          </Button>
-        </motion.div>
-      )}
-      <div className="flex items-center gap-2">
-        <motion.div
-          transition={isRecording ? { repeat: Infinity, duration: 0.8 } : {}}
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={isRecording ? stopRecording : startRecording}
-            className={`text-muted-foreground ${isRecording ? "bg-accent/20" : ""}`}
+            <span className="text-foreground truncate text-sm">
+              📎 {file.name}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setFile(null)}
+              className="p-1"
+            >
+              <XIcon className="size-4" />
+            </Button>
+          </motion.div>
+        )}
+        <div className="flex items-center gap-2">
+          <motion.div
+            transition={isRecording ? { repeat: Infinity, duration: 0.8 } : {}}
           >
-            {isRecording ? (
-              <span className="text-xs">{recordingDuration}s</span>
-            ) : (
-              <MicIcon className="size-5" />
-            )}
-          </Button>
-        </motion.div>
-        <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            className="text-muted-foreground"
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`text-muted-foreground ${isRecording ? "bg-accent/20" : ""}`}
+            >
+              {isRecording ? (
+                <span className="text-xs">{recordingDuration}s</span>
+              ) : (
+                <MicIcon className="size-5" />
+              )}
+            </Button>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            transition={{ duration: 0.2 }}
           >
-            <PaperclipIcon className="size-5" />
-          </Button>
-        </motion.div>
-        <Input
-          type="file"
-          ref={fileInputRef}
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-          className="hidden"
-        />
-        <motion.div
-          whileFocus={{ scale: 1.02, borderColor: "var(--ring)" }}
-          transition={{ duration: 0.2 }}
-          className="flex-grow"
-        >
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-muted-foreground"
+            >
+              <PaperclipIcon className="size-5" />
+            </Button>
+          </motion.div>
           <Input
-            placeholder="Whisper in the dark..."
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              sendTyping();
-            }}
-            className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent flex-grow border-none"
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="hidden"
           />
-        </motion.div>
-        <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-          <Button
-            type="submit"
-            className="bg-secondary text-secondary-foreground"
+          <motion.div
+            whileFocus={{ scale: 1.02, borderColor: "var(--ring)" }}
+            transition={{ duration: 0.2 }}
+            className="flex-grow"
           >
-            Send
-          </Button>
-        </motion.div>
-      </div>
-    </form>
+            <Input
+              placeholder="Whisper in the dark..."
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                sendTyping();
+              }}
+              className="bg-muted text-foreground placeholder-muted-foreground focus:ring-accent flex-grow border-none"
+            />
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Button
+              type="submit"
+              className="bg-secondary text-secondary-foreground"
+            >
+              Send
+            </Button>
+          </motion.div>
+        </div>
+      </form>
+    </div>
   );
 };
