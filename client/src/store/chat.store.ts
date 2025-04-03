@@ -11,11 +11,12 @@ interface ChatStore {
     status: Message["status"],
   ) => void;
   clearMessages: (recipient: string) => void;
+  getNumberOfMessages: (recipient: string) => number;
 }
 
 export const useChat = create<ChatStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       messages: {},
 
       addMessage: (recipient: string, message: Message) =>
@@ -45,6 +46,9 @@ export const useChat = create<ChatStore>()(
             [recipient]: [],
           },
         })),
+
+      getNumberOfMessages: (recipient: string) =>
+        get().messages[recipient]?.length || 0,
     }),
     {
       name: "chat-storage",

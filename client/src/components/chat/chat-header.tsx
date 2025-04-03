@@ -22,7 +22,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
     null,
   );
   const { isOnline } = useOnline();
-  const { clearMessages } = useChat();
+  const { clearMessages, getNumberOfMessages } = useChat();
 
   useEffect(() => {
     const fetchRecipientPublicKey = async () => {
@@ -103,6 +103,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
 
           <Button
             onClick={() => clearMessages(recipient)}
+            disabled={getNumberOfMessages(recipient) === 0}
             variant="outline"
             size="sm"
             className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
