@@ -80,7 +80,7 @@ export const Root = () => {
           <div className="flex h-screen w-screen items-center justify-center">
             <div className="w-full max-w-md space-y-6">
               <h1 className="text-xl font-bold">
-                The app is locked, you need to enter the password to unlock it!
+                The app is locked, you need to enter your password to unlock it!
               </h1>
 
               <Form {...form}>
