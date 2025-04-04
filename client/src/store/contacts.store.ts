@@ -5,10 +5,11 @@ import { persist } from "zustand/middleware";
 interface ContactsStore {
   contacts: Contact[];
   addContact: (contact: Contact) => void;
-  removeContact: (username: string) => void;
+  removeContact: (publicKey: string) => void;
   clearContacts: () => void;
-  isInContacts: (username: string) => boolean;
+  isInContacts: (publicKey: string) => boolean;
   getContactPublicKey: (username: string) => string | undefined;
+  getContactName: (publicKey: string) => string | undefined;
 }
 
 export const useContacts = create<ContactsStore>()(
@@ -19,15 +20,17 @@ export const useContacts = create<ContactsStore>()(
       addContact: (contact) =>
         set((state) => ({ contacts: [...state.contacts, contact] })),
 
-      removeContact: (username) =>
+      removeContact: (publicKey) =>
         set((state) => ({
-          contacts: state.contacts.filter((c) => c.username !== username),
+          contacts: state.contacts.filter((c) => c.publicKey !== publicKey),
         })),
 
       clearContacts: () => set({ contacts: [] }),
 
-      isInContacts: (username: string) => {
-        return get().contacts.some((contact) => contact.username === username);
+      isInContacts: (publicKey: string) => {
+        return get().contacts.some(
+          (contact) => contact.publicKey === publicKey,
+        );
       },
 
       getContactPublicKey: (username: string) => {
@@ -36,6 +39,11 @@ export const useContacts = create<ContactsStore>()(
         );
 
         return contact?.publicKey;
+      },
+
+      getContactName: (publicKey) => {
+        const contact = get().contacts.find((c) => c.publicKey === publicKey);
+        return contact?.username;
       },
     }),
     {

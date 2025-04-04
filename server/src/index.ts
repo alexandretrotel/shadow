@@ -22,13 +22,7 @@ function getCorsOrigins() {
 const app = express();
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? [
-            "https://shadow.alexandretrotel.org",
-            "https://shadow-*-alexandretrotel.vercel.app",
-          ]
-        : "*",
+    origin: getCorsOrigins(),
   })
 );
 app.use(express.json());
@@ -36,13 +30,7 @@ app.use(express.json());
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin:
-      process.env.NODE_ENV === "production"
-        ? [
-            "https://shadow.alexandretrotel.org",
-            "https://shadow-*-alexandretrotel.vercel.app",
-          ]
-        : "*",
+    origin: getCorsOrigins(),
   },
 });
 

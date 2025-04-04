@@ -2,11 +2,11 @@ import type { Server } from "socket.io";
 import type { Message } from "../lib/types";
 
 interface ConnectedUsers {
-  [username: string]: string; // Maps username to socket.id
+  [publicKey: string]: string; // Maps public key to socket.id
 }
 
 interface TypingTimeouts {
-  [username: string]: NodeJS.Timeout; // Maps username to timeout ID
+  [publicKey: string]: NodeJS.Timeout; // Maps public key to timeout ID
 }
 
 export function setupSockets(io: Server) {
