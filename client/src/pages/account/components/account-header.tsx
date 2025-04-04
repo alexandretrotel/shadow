@@ -1,4 +1,4 @@
-import { AccountIdentity } from "./account-idendity";
+import { AccountIdentity } from "./account-identity";
 
 interface AccountHeaderProps {
   fingerprint: string | null;
