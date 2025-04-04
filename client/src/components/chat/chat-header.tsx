@@ -32,7 +32,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
           <div className="flex items-center gap-2">
             <span
               className={`h-2 w-2 rounded-full ${
-                isOnline(recipient)
+                isOnline(recipientPublicKey)
                   ? "animate-pulse bg-green-500"
                   : "bg-gray-400"
               }`}
