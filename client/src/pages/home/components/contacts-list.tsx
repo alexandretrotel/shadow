@@ -1,6 +1,11 @@
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Contact } from "@/lib/types";
 import { useOnline } from "@/store/online.store";
+import { useContacts } from "@/store/contacts.store";
+import { toast } from "sonner";
+import { ContactListItem } from "./contact-list-item";
+import { EditContactDialog } from "./edit-contact-dialog";
+import { DeleteContactDialog } from "./delete-contact-dialog";
 
 interface ContactsListProps {
   contacts: Contact[];
@@ -9,39 +14,50 @@ interface ContactsListProps {
 
 export const ContactsList = ({ contacts, startChat }: ContactsListProps) => {
   const { isOnline } = useOnline();
+  const { removeContact } = useContacts();
+  const [editContactData, setEditContactData] = useState<Contact | null>(null);
+  const [deleteContactPublicKey, setDeleteContactPublicKey] = useState<
+    string | null
+  >(null);
+
+  const handleDelete = (publicKey: string) => {
+    removeContact(publicKey);
+    localStorage.removeItem(`fingerprint_${publicKey}`);
+    toast.success("Contact deleted");
+    setDeleteContactPublicKey(null);
+  };
 
   return (
     <div>
-      <h3 className="text-lg font-semibold">Your Contacts</h3>
+      <h3 className="mb-4 text-lg font-semibold">Your Contacts</h3>
       {contacts.length === 0 ? (
         <p className="text-muted-foreground text-sm">No contacts added yet.</p>
       ) : (
-        contacts.map((contact) => (
-          <div
-            key={contact.publicKey}
-            className="flex items-center justify-between py-2"
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  isOnline(contact.publicKey)
-                    ? "animate-pulse bg-green-500"
-                    : "bg-gray-500"
-                }`}
-              />
-              <span>{contact.username}</span>
-            </div>
-
-            <Button
-              variant="ghost"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={() => startChat(contact.username)}
-            >
-              Chat
-            </Button>
-          </div>
-        ))
+        <ul className="space-y-2">
+          {contacts.map((contact) => (
+            <ContactListItem
+              key={contact.publicKey}
+              contact={contact}
+              isOnline={isOnline(contact.publicKey)}
+              onChat={() => startChat(contact.publicKey)}
+              onEdit={() => setEditContactData(contact)}
+              onDelete={() => setDeleteContactPublicKey(contact.publicKey)}
+            />
+          ))}
+        </ul>
       )}
+
+      <EditContactDialog
+        contact={editContactData}
+        onClose={() => setEditContactData(null)}
+      />
+
+      <DeleteContactDialog
+        contact={contacts.find((c) => c.publicKey === deleteContactPublicKey)}
+        isOpen={!!deleteContactPublicKey}
+        onClose={() => setDeleteContactPublicKey(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 };

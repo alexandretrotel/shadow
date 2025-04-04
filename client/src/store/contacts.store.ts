@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware";
 interface ContactsStore {
   contacts: Contact[];
   addContact: (contact: Contact) => void;
+  editContact: (publicKey: string, updatedContact: Contact) => void;
   removeContact: (publicKey: string) => void;
   clearContacts: () => void;
   isInContacts: (publicKey: string) => boolean;
@@ -19,6 +20,15 @@ export const useContacts = create<ContactsStore>()(
 
       addContact: (contact) =>
         set((state) => ({ contacts: [...state.contacts, contact] })),
+
+      editContact: (publicKey, updatedContact) =>
+        set((state) => ({
+          contacts: state.contacts.map((contact) =>
+            contact.publicKey === publicKey
+              ? { ...contact, ...updatedContact }
+              : contact,
+          ),
+        })),
 
       removeContact: (publicKey) =>
         set((state) => ({
