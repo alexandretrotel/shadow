@@ -93,6 +93,25 @@ export const WelcomeCard = () => {
             onSubmit={form.handleSubmit(isGenerating ? onGenerate : onImport)}
             className="space-y-4"
           >
+            {!isGenerating && (
+              <FormField
+                control={form.control}
+                name="privateKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Paste your private key here"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
               name="password"
