@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AccountHeader } from "./components/account-header";
-import { AccountIdentity } from "./components/account-idendity";
+import { AccountIdentity } from "./components/account-identity";
 import { KeyDisplay } from "./components/key-display";
 import { QRCodeDisplay } from "./components/qrcode-display";
 import { useAuth } from "@/store/auth.store";
