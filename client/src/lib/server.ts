@@ -4,5 +4,5 @@ const IS_VERCEL_PREVIEW = import.meta.env.VITE_VERCEL_ENV === "preview";
 export const SERVER_URL = DEV
   ? "http://localhost:3000" // Local development
   : IS_VERCEL_PREVIEW
-    ? "https://shadow-staging-backend.alexandretrotel.org" // Vercel preview
+    ? "http://shadow-staging-backend.alexandretrotel.org" // Vercel preview
     : "https://shadow-backend.alexandretrotel.org"; // Production
