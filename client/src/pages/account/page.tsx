@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AccountHeader } from "./components/account-header";
-import { AccountIdentity } from "./components/account-idendity";
 import { KeyDisplay } from "./components/key-display";
 import { QRCodeDisplay } from "./components/qrcode-display";
 import { useAuth } from "@/store/auth.store";
@@ -68,13 +67,9 @@ export const Account = () => {
   return (
     <Card className="w-full max-w-lg border-none shadow-none">
       <CardHeader>
-        <AccountHeader />
+        <AccountHeader fingerprint={fingerprint} />
       </CardHeader>
       <CardContent className="space-y-6">
-        <AccountIdentity
-          username={publicKey || "Loading..."}
-          fingerprint={fingerprint}
-        />
         <KeyDisplay
           label="Public Key"
           keyValue={publicKey || "Loading..."}
