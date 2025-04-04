@@ -1,7 +1,7 @@
 import { Contact } from "@/lib/types";
 import { useContacts } from "@/store/contacts.store";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Form,
   FormField,
   FormItem,
   FormLabel,
@@ -43,7 +44,7 @@ export const EditContactDialog = ({
     resolver: zodResolver(editContactSchema),
     defaultValues: contact
       ? { username: contact.username, publicKey: contact.publicKey }
-      : undefined,
+      : { username: "", publicKey: "" },
   });
 
   const handleSubmit = (data: EditContactForm) => {
@@ -60,6 +61,8 @@ export const EditContactDialog = ({
       toast.error("Failed to update contact");
     }
   };
+
+  if (!contact) return null;
 
   return (
     <Dialog open={!!contact} onOpenChange={(open) => !open && onClose()}>
@@ -108,6 +111,7 @@ export const EditContactDialog = ({
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
+
               <Button type="submit">Save</Button>
             </DialogFooter>
           </form>

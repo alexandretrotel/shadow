@@ -31,10 +31,12 @@ export const DeleteContactDialog = ({
           This action cannot be undone.
         </DialogDescription>
       </DialogHeader>
+
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
+
         <Button
           variant="destructive"
           onClick={() => contact && onConfirm(contact.publicKey)}

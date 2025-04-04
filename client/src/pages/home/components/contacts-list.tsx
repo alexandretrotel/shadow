@@ -39,7 +39,7 @@ export const ContactsList = ({ contacts, startChat }: ContactsListProps) => {
               key={contact.publicKey}
               contact={contact}
               isOnline={isOnline(contact.publicKey)}
-              onChat={() => startChat(contact.publicKey)}
+              onChat={() => startChat(contact.username)}
               onEdit={() => setEditContactData(contact)}
               onDelete={() => setDeleteContactPublicKey(contact.publicKey)}
             />
