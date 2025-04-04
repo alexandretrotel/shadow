@@ -101,7 +101,7 @@ export const WelcomeCard = () => {
                   <FormItem>
                     <FormControl>
                       <Input
-                        type="text"
+                        type="password"
                         placeholder="Paste your private key here"
                         {...field}
                       />
