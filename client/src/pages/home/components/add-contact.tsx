@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Form,
   FormControl,
@@ -18,6 +19,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { encode } from "@stablelib/base64";
 import { useAuth } from "@/store/auth.store";
 import { Contact } from "@/lib/types";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+} from "@/components/ui/drawer";
+import { Scanner } from "@yudiel/react-qr-scanner";
 
 const addContactSchema = z.object({
   name: z.string().min(1, "Contact name is required"),
@@ -29,6 +39,7 @@ type AddContactForm = z.infer<typeof addContactSchema>;
 export const AddContact = () => {
   const { addContact, isInContacts } = useContacts();
   const { getKeyPair } = useAuth();
+  const [isQrDrawerOpen, setIsQrDrawerOpen] = useState(false);
 
   const keyPair = getKeyPair();
   const myPublicKey = keyPair ? encode(keyPair.publicKey) : "";
@@ -66,6 +77,21 @@ export const AddContact = () => {
     }
   };
 
+  const handleQrScan = (result: string) => {
+    try {
+      const parsedData = JSON.parse(result);
+      if (parsedData.publicKey) {
+        contactForm.setValue("publicKey", parsedData.publicKey);
+        toast.success("Public key scanned successfully");
+        setIsQrDrawerOpen(false);
+      } else {
+        toast.error("Invalid QR code format");
+      }
+    } catch {
+      toast.error("Failed to parse QR code");
+    }
+  };
+
   return (
     <Form {...contactForm}>
       <form
@@ -85,6 +111,7 @@ export const AddContact = () => {
             </FormItem>
           )}
         />
+
         <FormField
           control={contactForm.control}
           name="publicKey"
@@ -92,12 +119,23 @@ export const AddContact = () => {
             <FormItem>
               <FormLabel>Public Key</FormLabel>
               <FormControl>
-                <Input placeholder="Paste public key" {...field} />
+                <div className="flex items-center gap-2">
+                  <Input placeholder="Paste public key" {...field} />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="md:hidden"
+                    onClick={() => setIsQrDrawerOpen(true)}
+                  >
+                    Scan QR
+                  </Button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <Button
           type="submit"
           disabled={
@@ -108,6 +146,35 @@ export const AddContact = () => {
           Add Contact
         </Button>
       </form>
+
+      <Drawer open={isQrDrawerOpen} onOpenChange={setIsQrDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Scan Contact QR Code</DrawerTitle>
+            <DrawerDescription>
+              Point your camera at the QR code to add the contact's public key.
+            </DrawerDescription>
+          </DrawerHeader>
+
+          <div className="px-4 py-6">
+            <div className="mx-auto max-w-[300px] overflow-hidden rounded-lg border border-gray-200">
+              <Scanner
+                onScan={(detectedCodes) => {
+                  if (detectedCodes.length > 0) {
+                    handleQrScan(detectedCodes[0].rawValue);
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <DrawerFooter>
+            <Button variant="outline" onClick={() => setIsQrDrawerOpen(false)}>
+              Cancel
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </Form>
   );
 };
