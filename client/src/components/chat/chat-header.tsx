@@ -1,12 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "@/components/ui/card";
-import { SERVER_URL } from "@/lib/server";
 import { useChat } from "@/store/chat.store";
 import { getKeyFingerprint } from "@/lib/crypto";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { publicKeySchema } from "@/lib/schemas";
 import { decode } from "@stablelib/base64";
 import { VerifyQR } from "./verify-qr";
 import { featureFlags } from "@/lib/features";
@@ -19,53 +15,11 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
-  const [recipientPublicKey, setRecipientPublicKey] = useState<string | null>(
-    null,
-  );
   const { isOnline } = useOnline();
   const { clearMessages, getNumberOfMessages } = useChat();
   const { getContactPublicKey } = useContacts();
 
-  useEffect(() => {
-    const fetchRecipientPublicKey = async () => {
-      try {
-        const response = await fetch(`${SERVER_URL}/public-key/${recipient}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch public key");
-
-        const data = await response.json();
-        const { publicKey } = publicKeySchema.parse(data);
-        const decodedPublicKey = decode(publicKey);
-        const newFingerprint = getKeyFingerprint(decodedPublicKey);
-
-        const storedFingerprint = localStorage.getItem(
-          `fingerprint_${recipient}`,
-        );
-        if (storedFingerprint && storedFingerprint !== newFingerprint) {
-          toast.error(`Warning: Public key for ${recipient} has changed!`);
-        }
-
-        setRecipientPublicKey(publicKey);
-      } catch {
-        toast.error(
-          `Failed to fetch public key for ${recipient}. Please try again.`,
-        );
-      }
-    };
-
-    if (recipient) {
-      if (recipient.startsWith("local-")) {
-        setRecipientPublicKey(getContactPublicKey(recipient) ?? null);
-      } else {
-        fetchRecipientPublicKey();
-      }
-    } else {
-      setRecipientPublicKey(null);
-    }
-  }, [getContactPublicKey, recipient]);
+  const recipientPublicKey = getContactPublicKey(recipient);
 
   const fingerprint = recipientPublicKey
     ? getKeyFingerprint(decode(recipientPublicKey))
