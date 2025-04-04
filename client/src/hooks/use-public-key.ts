@@ -1,5 +1,6 @@
 import { publicKeySchema } from "@/lib/schemas";
 import { SERVER_URL } from "@/lib/server";
+import { useContacts } from "@/store/contacts.store";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -7,6 +8,8 @@ export const usePublicKey = (recipient: string | undefined) => {
   const [recipientPublicKey, setRecipientPublicKey] = useState<string | null>(
     null,
   );
+
+  const { getContactPublicKey } = useContacts();
 
   useEffect(() => {
     const fetchPublicKey = async () => {
@@ -27,18 +30,21 @@ export const usePublicKey = (recipient: string | undefined) => {
 
         setRecipientPublicKey(publicKey);
       } catch {
-        toast.error("Could not fetch recipient public key");
+        toast.error("Could not fetch recipient public key from the registry");
         setRecipientPublicKey(null);
       }
     };
 
     if (recipient) {
-      fetchPublicKey();
+      if (recipient.startsWith("local-")) {
+        setRecipientPublicKey(getContactPublicKey(recipient) ?? null);
+      } else {
+        fetchPublicKey();
+      }
     } else {
-      toast.error("Recipient is not defined");
       setRecipientPublicKey(null);
     }
-  }, [recipient]);
+  }, [getContactPublicKey, recipient]);
 
   return recipientPublicKey;
 };

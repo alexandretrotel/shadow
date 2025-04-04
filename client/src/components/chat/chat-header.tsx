@@ -11,6 +11,7 @@ import { decode } from "@stablelib/base64";
 import { VerifyQR } from "./verify-qr";
 import { featureFlags } from "@/lib/features";
 import { useOnline } from "@/store/online.store";
+import { useContacts } from "@/store/contacts.store";
 
 interface ChatHeaderProps {
   recipient: string;
@@ -23,6 +24,7 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
   );
   const { isOnline } = useOnline();
   const { clearMessages, getNumberOfMessages } = useChat();
+  const { getContactPublicKey } = useContacts();
 
   useEffect(() => {
     const fetchRecipientPublicKey = async () => {
@@ -54,8 +56,16 @@ export const ChatHeader = ({ recipient, onLeave }: ChatHeaderProps) => {
       }
     };
 
-    fetchRecipientPublicKey();
-  }, [recipient]);
+    if (recipient) {
+      if (recipient.startsWith("local-")) {
+        setRecipientPublicKey(getContactPublicKey(recipient) ?? null);
+      } else {
+        fetchRecipientPublicKey();
+      }
+    } else {
+      setRecipientPublicKey(null);
+    }
+  }, [getContactPublicKey, recipient]);
 
   const fingerprint = recipientPublicKey
     ? getKeyFingerprint(decode(recipientPublicKey))
