@@ -20,12 +20,12 @@ export const Account = () => {
   const [fingerprint, setFingerprint] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { username, keyPair } = useAuth();
+  const { keyPair } = useAuth();
 
   useEffect(() => {
-    if (keyPair && username) {
-      const encodedPublicKey = encode(keyPair.publicKey || new Uint8Array());
-      const encodedPrivateKey = encode(keyPair.secretKey || new Uint8Array());
+    if (keyPair) {
+      const encodedPublicKey = encode(keyPair.publicKey);
+      const encodedPrivateKey = encode(keyPair.secretKey);
       const publicKeyFingerprint = getKeyFingerprint(keyPair.publicKey);
 
       setPublicKey(encodedPublicKey);
@@ -35,18 +35,16 @@ export const Account = () => {
       const generateQR = async () => {
         const QRCode = await import("qrcode");
         const qrData = JSON.stringify({
-          username,
+          publicKey: encodedPublicKey,
           fingerprint: publicKeyFingerprint,
         });
         const dataUrl = await QRCode.toDataURL(qrData);
         setQrCode(dataUrl);
       };
 
-      generateQR().catch(() => {
-        toast.error("Failed to generate QR code.");
-      });
+      generateQR().catch(() => toast.error("Failed to generate QR code."));
     }
-  }, [keyPair, username]);
+  }, [keyPair]);
 
   const handleCopy = (key: string, type: "public" | "private") => {
     navigator.clipboard.writeText(key);
@@ -62,8 +60,7 @@ export const Account = () => {
     }
   };
 
-  if (!username) {
-    toast.error("Please log in to view your account.");
+  if (!keyPair) {
     navigate("/");
     return null;
   }
@@ -73,21 +70,18 @@ export const Account = () => {
       <CardHeader>
         <AccountHeader />
       </CardHeader>
-
       <CardContent className="space-y-6">
-        <AccountIdentity username={username} fingerprint={fingerprint} />
-
-        <div className="space-y-2">
-          <KeyDisplay
-            label="Public Key"
-            keyValue={publicKey || "Loading..."}
-            copied={copiedPublic}
-            onCopy={() => publicKey && handleCopy(publicKey, "public")}
-          />
-        </div>
-
+        <AccountIdentity
+          username={publicKey || "Loading..."}
+          fingerprint={fingerprint}
+        />
+        <KeyDisplay
+          label="Public Key"
+          keyValue={publicKey || "Loading..."}
+          copied={copiedPublic}
+          onCopy={() => publicKey && handleCopy(publicKey, "public")}
+        />
         <QRCodeDisplay qrCode={qrCode} />
-
         <KeyDisplay
           label="Private Key"
           keyValue={privateKey ? "Copy Private Key (Keep Safe!)" : "Loading..."}
@@ -95,7 +89,6 @@ export const Account = () => {
           onCopy={() => privateKey && handleCopy(privateKey, "private")}
           isPrivate
         />
-
         <Button
           variant="ghost"
           className="mt-6 w-full py-3"

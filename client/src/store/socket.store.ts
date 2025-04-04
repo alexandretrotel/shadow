@@ -9,6 +9,7 @@ import {
   debouncedToastSuccess,
   debouncedToastWarn,
 } from "@/lib/debounce";
+import { encode } from "@stablelib/base64";
 
 interface SocketStore {
   socket: Socket | null;
@@ -81,11 +82,14 @@ export const useSocket = create<SocketStore>((set, get) => {
 
 export const useInitializeSocket = () => {
   const { initialize, socket, closeSocket } = useSocket.getState();
-  const { username } = useAuth();
+  const { getKeyPair } = useAuth();
 
   useEffect(() => {
-    if (username && !socket) {
-      initialize(username);
+    const keyPair = getKeyPair();
+
+    if (keyPair && !socket) {
+      const publicKey = encode(keyPair?.publicKey);
+      initialize(publicKey);
     }
 
     return () => {
@@ -93,5 +97,5 @@ export const useInitializeSocket = () => {
         closeSocket();
       }
     };
-  }, [closeSocket, initialize, socket, username]);
+  }, [closeSocket, getKeyPair, initialize, socket]);
 };

@@ -4,7 +4,7 @@ import { useOnline } from "@/store/online.store";
 
 interface ContactsListProps {
   contacts: Contact[];
-  startChat: (username: string) => void;
+  startChat: (publicKey: string) => void;
 }
 
 export const ContactsList = ({ contacts, startChat }: ContactsListProps) => {
@@ -18,7 +18,7 @@ export const ContactsList = ({ contacts, startChat }: ContactsListProps) => {
       ) : (
         contacts.map((contact) => (
           <div
-            key={contact.username}
+            key={contact.publicKey}
             className="flex items-center justify-between py-2"
           >
             <div className="flex items-center gap-2">
@@ -35,7 +35,7 @@ export const ContactsList = ({ contacts, startChat }: ContactsListProps) => {
             <Button
               variant="ghost"
               className="text-muted-foreground hover:text-foreground"
-              onClick={() => startChat(contact.username)}
+              onClick={() => startChat(contact.publicKey)}
             >
               Chat
             </Button>

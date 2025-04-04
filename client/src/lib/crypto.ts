@@ -80,3 +80,14 @@ export const getPublicKeyFromPrivateKey = (
 ): Uint8Array => {
   return nacl.box.keyPair.fromSecretKey(secretKey).publicKey;
 };
+
+/**
+ * Derives the key pair from a given private (secret) key.
+ * @param {Uint8Array} secretKey - The secret (private) key.
+ * @returns {nacl.BoxKeyPair} The corresponding key pair containing the public and secret keys.
+ */
+export const getKeyPairFromPrivateKey = (
+  secretKey: Uint8Array,
+): nacl.BoxKeyPair => {
+  return nacl.box.keyPair.fromSecretKey(secretKey);
+};
