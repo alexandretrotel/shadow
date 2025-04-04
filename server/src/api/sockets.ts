@@ -2,35 +2,35 @@ import type { Server } from "socket.io";
 import type { Message } from "../lib/types";
 
 interface ConnectedUsers {
-  [username: string]: string; // Maps username to socket.id
+  [publicKey: string]: string; // Maps public key to socket.id
 }
 
 interface TypingTimeouts {
-  [username: string]: NodeJS.Timeout; // Maps username to timeout ID
+  [publicKey: string]: NodeJS.Timeout; // Maps public key to timeout ID
 }
 
 export function setupSockets(io: Server) {
-  const connectedUsers: ConnectedUsers = {}; // Store connected users and their socket IDs
+  const connectedPublicKeys: ConnectedUsers = {}; // Store connected users and their socket IDs
   const typingTimeouts: TypingTimeouts = {}; // Store typing timeouts
 
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
     // Register the user with their username
-    socket.on("register", (username: string) => {
-      connectedUsers[username] = socket.id;
-      console.log(`User registered: ${username} with socket ID: ${socket.id}`);
+    socket.on("register", (publicKey: string) => {
+      connectedPublicKeys[publicKey] = socket.id; // Store the user's public key and socket ID
+      console.log(`User registered: ${publicKey} with socket ID: ${socket.id}`);
 
       // Broadcast updated online users list
-      io.emit("onlineUsers", Object.keys(connectedUsers));
+      io.emit("onlinePublicKeys", Object.keys(connectedPublicKeys));
     });
 
     // Handle user messages
     socket.on(
       "message",
       (data: { sender: string; recipient: string; message: Message }) => {
-        const senderSocketId = connectedUsers[data.sender]; // Get sender's socket ID
-        const recipientSocketId = connectedUsers[data.recipient]; // Get recipient's socket ID
+        const senderSocketId = connectedPublicKeys[data.sender]; // Get sender's socket ID
+        const recipientSocketId = connectedPublicKeys[data.recipient]; // Get recipient's socket ID
 
         if (senderSocketId) {
           // Confirm the message was sent to the sender
@@ -58,7 +58,7 @@ export function setupSockets(io: Server) {
 
     // Handle user typing events
     socket.on("typing", (data: { sender: string; recipient: string }) => {
-      const recipientSocketId = connectedUsers[data.recipient]; // Get recipient's socket ID
+      const recipientSocketId = connectedPublicKeys[data.recipient]; // Get recipient's socket ID
 
       if (recipientSocketId) {
         // Clear any existing timeout for this user
@@ -82,18 +82,18 @@ export function setupSockets(io: Server) {
       console.log("User disconnected:", socket.id);
 
       // Remove the disconnected user from the connectedUsers map
-      for (const username in connectedUsers) {
-        if (connectedUsers[username] === socket.id) {
-          delete connectedUsers[username];
-          console.log(`User ${username} removed from connected users.`);
+      for (const publicKey in connectedPublicKeys) {
+        if (connectedPublicKeys[publicKey] === socket.id) {
+          delete connectedPublicKeys[publicKey];
+          console.log(`User ${publicKey} removed from connected users.`);
 
           // Broadcast updated online users list
-          io.emit("onlineUsers", Object.keys(connectedUsers));
+          io.emit("onlinePublicKeys", Object.keys(connectedPublicKeys));
 
           // Clear any existing typing timeout for this user
-          if (typingTimeouts[username]) {
-            clearTimeout(typingTimeouts[username]);
-            delete typingTimeouts[username];
+          if (typingTimeouts[publicKey]) {
+            clearTimeout(typingTimeouts[publicKey]);
+            delete typingTimeouts[publicKey];
           }
 
           break;

@@ -6,7 +6,7 @@ import { setupRoutes } from "./api/routes";
 import { setupSockets } from "./api/sockets";
 
 function getCorsOrigins() {
-  const env = process.env.NODE_ENV || "production"; // Default to "production" if not set
+  const env = process.env.NODE_ENV || "development";
 
   switch (env) {
     case "production":
@@ -15,20 +15,14 @@ function getCorsOrigins() {
         "https://shadow-backend.alexandretrotel.org", // Production backend
       ];
     default:
-      return "*"; // Development or fallback (e.g., localhost)
+      return "*"; // Allow all origins in development
   }
 }
 
 const app = express();
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? [
-            "https://shadow.alexandretrotel.org",
-            "https://shadow-*-alexandretrotel.vercel.app",
-          ]
-        : "*",
+    origin: getCorsOrigins(),
   })
 );
 app.use(express.json());
@@ -36,13 +30,7 @@ app.use(express.json());
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin:
-      process.env.NODE_ENV === "production"
-        ? [
-            "https://shadow.alexandretrotel.org",
-            "https://shadow-*-alexandretrotel.vercel.app",
-          ]
-        : "*",
+    origin: getCorsOrigins(),
   },
 });
 

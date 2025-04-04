@@ -8,28 +8,28 @@ import { redirect, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/store/auth.store";
 import { debounce } from "lodash";
 import { decryptMessage, encryptMessage } from "@/lib/crypto";
-import { usePublicKey } from "@/hooks/use-public-key";
-import { decode } from "@stablelib/base64";
+import { decode, encode } from "@stablelib/base64";
+import { useContacts } from "@/store/contacts.store";
 
 export const Chat = () => {
   const { recipient } = useParams<{ recipient: string }>();
-
   const [isTyping, setIsTyping] = useState(false);
 
   const { socket, closeSocket } = useSocket();
-  const { username, getKeyPair } = useAuth();
-  const { messages, addMessage, updateMessageStatus } = useChat();
+  const { getKeyPair } = useAuth();
+  const { messages, addMessage } = useChat();
+  const { getContactPublicKey, getContactName } = useContacts();
   const navigate = useNavigate();
-  const recipientPublicKey = usePublicKey(recipient);
 
   const keyPair = getKeyPair();
   const privateKey = keyPair?.secretKey;
-  const publicKey = keyPair?.publicKey;
+  const publicKey = keyPair ? encode(keyPair.publicKey) : null;
+  const recipientPublicKey = getContactPublicKey(recipient!);
 
   const debouncedSendMessage = useMemo(
     () =>
       debounce((content: string) => {
-        if (!socket || !username || !recipient) {
+        if (!socket || !recipient || !publicKey) {
           toast.error("Connection or authentication issue");
           redirect("/");
           return;
@@ -45,60 +45,60 @@ export const Chat = () => {
           decode(recipientPublicKey),
           privateKey,
         );
-
         const message: Message = {
-          sender: username,
+          sender: publicKey,
           content: encryptedContent,
           messageId: crypto.randomUUID(),
           status: "sent",
         };
 
-        socket.emit("message", { sender: username, recipient, message });
+        socket.emit("message", {
+          sender: publicKey,
+          recipient: recipientPublicKey,
+          message,
+        });
       }, 300),
-    [socket, username, recipient, recipientPublicKey, privateKey],
+    [socket, recipient, publicKey, recipientPublicKey, privateKey],
   );
 
   const debouncedHandleTyping = useMemo(
     () =>
       debounce(() => {
-        if (!socket || !username || !recipient) {
+        if (!socket || !recipientPublicKey || !publicKey) {
           toast.error("Connection or authentication issue");
           return;
         }
-        socket.emit("typing", { sender: username, recipient });
+        socket.emit("typing", {
+          sender: publicKey,
+          recipient: recipientPublicKey,
+        });
       }, 500),
-    [socket, username, recipient],
+    [socket, publicKey, recipientPublicKey],
   );
 
   useEffect(() => {
-    if (!socket || !recipient || !username) {
+    if (!socket || !recipient || !publicKey) {
       if (!socket) toast.error("Not connected to the server");
       if (!recipient) toast.error("Recipient not found");
-      if (!username) toast.error("You are not authenticated");
+      if (!publicKey) toast.error("You are not authenticated");
       return;
     }
 
-    // Function to attach event listeners
     const attachListeners = () => {
       socket
         .off("message")
         .on("message", (msg: Message) => addMessage(recipient, msg));
       socket.off("typing").on("typing", () => setIsTyping(true));
-      socket.off("stopTyping").on("stopTyping", () => {
-        setIsTyping(false);
-      });
-      socket.off("recipientOffline").on("recipientOffline", ({ recipient }) => {
-        toast.error(`Message could not be delivered. ${recipient} is offline.`);
+      socket.off("stopTyping").on("stopTyping", () => setIsTyping(false));
+      socket.off("recipientOffline").on("recipientOffline", () => {
+        toast.error(
+          `Message could not be delivered. Your recipient is offline.`,
+        );
       });
     };
 
-    // Initial attachment
     attachListeners();
-
-    // Reattach listeners on reconnect
-    socket.on("reconnect", () => {
-      attachListeners();
-    });
+    socket.on("reconnect", attachListeners);
 
     return () => {
       socket.off("message");
@@ -114,21 +114,15 @@ export const Chat = () => {
     addMessage,
     closeSocket,
     recipient,
-    username,
+    publicKey,
     debouncedSendMessage,
     debouncedHandleTyping,
-    updateMessageStatus,
   ]);
 
-  const handleSendMessage = (content: string) => {
-    debouncedSendMessage(content);
-  };
+  const handleSendMessage = (content: string) => debouncedSendMessage(content);
+  const handleTyping = () => debouncedHandleTyping();
 
-  const handleTyping = () => {
-    debouncedHandleTyping();
-  };
-
-  if (!recipient || !username || !publicKey) {
+  if (!recipient || !publicKey || !recipientPublicKey) {
     toast.error("Authentication or recipient issue");
     redirect("/");
     return null;
@@ -136,9 +130,7 @@ export const Chat = () => {
 
   const decryptedMessages =
     messages[recipient]?.map((msg) => {
-      if (!privateKey || !recipientPublicKey) {
-        return msg;
-      }
+      if (!privateKey || !recipientPublicKey) return msg;
 
       try {
         const decryptedContent = decryptMessage(
@@ -146,7 +138,6 @@ export const Chat = () => {
           decode(recipientPublicKey),
           privateKey,
         );
-
         return { ...msg, content: decryptedContent };
       } catch {
         return { ...msg, content: "[Decryption Failed]" };
@@ -155,13 +146,13 @@ export const Chat = () => {
 
   return (
     <ChatContainer
-      recipient={recipient}
+      recipient={getContactName(recipient) || recipient}
       messages={decryptedMessages}
       onSend={handleSendMessage}
       onLeave={() => navigate("/")}
       isTyping={isTyping}
       sendTyping={handleTyping}
-      username={username}
+      username={publicKey}
     />
   );
 };

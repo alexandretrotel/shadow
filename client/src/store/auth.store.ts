@@ -2,13 +2,9 @@ import { create } from "zustand";
 import nacl from "tweetnacl";
 
 interface AuthStore {
-  username: string | null;
+  isAuthenticated: boolean;
   keyPair: nacl.BoxKeyPair | null;
-  setAuth: (
-    username: string,
-    keyPair: nacl.BoxKeyPair,
-    password: string,
-  ) => Promise<void>;
+  setAuth: (keyPair: nacl.BoxKeyPair, password: string) => Promise<void>;
   loadAuth: (password: string) => Promise<void>;
   getKeyPair: () => nacl.BoxKeyPair | null;
   clearAuth: () => void;
@@ -106,19 +102,15 @@ const toUint8Array = (obj: any): Uint8Array => {
 };
 
 export const useAuth = create<AuthStore>((set, get) => ({
-  username: null,
+  isAuthenticated: false,
   keyPair: null,
 
-  setAuth: async (
-    username: string,
-    keyPair: nacl.BoxKeyPair,
-    password: string,
-  ) => {
-    const state = { username, keyPair };
+  setAuth: async (keyPair: nacl.BoxKeyPair, password: string) => {
+    const state = { keyPair };
     const serialized = JSON.stringify(state);
     const encrypted = await encryptData(serialized, password);
     localStorage.setItem("auth-storage", encrypted);
-    set({ username, keyPair });
+    set({ keyPair });
   },
 
   loadAuth: async (password: string) => {
@@ -137,7 +129,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
       publicKey: toUint8Array(state.keyPair.publicKey),
       secretKey: toUint8Array(state.keyPair.secretKey),
     };
-    set({ username: state.username, keyPair: reconstructedKeyPair });
+    set({ keyPair: reconstructedKeyPair, isAuthenticated: true });
   },
 
   getKeyPair: () => {
@@ -146,7 +138,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
   },
 
   clearAuth: () => {
-    set({ username: null, keyPair: null });
+    set({ keyPair: null, isAuthenticated: false });
     localStorage.removeItem("auth-storage");
   },
 }));

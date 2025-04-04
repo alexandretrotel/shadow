@@ -9,24 +9,22 @@ import { Button } from "@/components/ui/button";
 
 export const Home = () => {
   const { contacts } = useContacts();
-  const { username } = useAuth();
+  const { getKeyPair } = useAuth();
   const navigate = useNavigate();
+  const keyPair = getKeyPair();
 
   const startChat = (contact: string) => {
     navigate(`/chat/${contact}`);
   };
 
-  if (!username) {
+  if (!keyPair) {
     return <WelcomeCard />;
   }
 
   return (
     <Card className="w-full max-w-md border-none shadow-none">
       <CardHeader className="flex items-center justify-between gap-4">
-        <h2 className="text-2xl font-semibold">
-          Welcome, <span className="text-primary">{username}</span>
-        </h2>
-
+        <h2 className="text-2xl font-semibold">Welcome to Shadow</h2>
         <Button
           onClick={() => navigate("/account")}
           variant="ghost"
@@ -35,7 +33,6 @@ export const Home = () => {
           My Account
         </Button>
       </CardHeader>
-
       <CardContent className="space-y-8">
         <AddContact />
         <ContactsList contacts={contacts} startChat={startChat} />

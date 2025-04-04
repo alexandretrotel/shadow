@@ -1,12 +1,16 @@
+import { Contact } from "@/lib/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface ContactsStore {
-  contacts: string[];
-  addContact: (contact: string) => void;
-  removeContact: (contact: string) => void;
+  contacts: Contact[];
+  addContact: (contact: Contact) => void;
+  editContact: (publicKey: string, updatedContact: Contact) => void;
+  removeContact: (publicKey: string) => void;
   clearContacts: () => void;
-  isInContacts: (contact: string) => boolean;
+  isInContacts: (publicKey: string) => boolean;
+  getContactPublicKey: (username: string) => string | undefined;
+  getContactName: (publicKey: string) => string | undefined;
 }
 
 export const useContacts = create<ContactsStore>()(
@@ -17,16 +21,39 @@ export const useContacts = create<ContactsStore>()(
       addContact: (contact) =>
         set((state) => ({ contacts: [...state.contacts, contact] })),
 
-      removeContact: (contact) =>
+      editContact: (publicKey, updatedContact) =>
         set((state) => ({
-          contacts: state.contacts.filter((c) => c !== contact),
+          contacts: state.contacts.map((contact) =>
+            contact.publicKey === publicKey
+              ? { ...contact, ...updatedContact }
+              : contact,
+          ),
+        })),
+
+      removeContact: (publicKey) =>
+        set((state) => ({
+          contacts: state.contacts.filter((c) => c.publicKey !== publicKey),
         })),
 
       clearContacts: () => set({ contacts: [] }),
 
-      isInContacts: (contact: string) => {
-        const state = get();
-        return state.contacts.includes(contact);
+      isInContacts: (publicKey: string) => {
+        return get().contacts.some(
+          (contact) => contact.publicKey === publicKey,
+        );
+      },
+
+      getContactPublicKey: (username: string) => {
+        const contact = get().contacts.find(
+          (contact) => contact.username === username,
+        );
+
+        return contact?.publicKey;
+      },
+
+      getContactName: (publicKey) => {
+        const contact = get().contacts.find((c) => c.publicKey === publicKey);
+        return contact?.username;
       },
     }),
     {

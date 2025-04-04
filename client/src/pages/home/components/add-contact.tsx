@@ -11,73 +11,58 @@ import { Input } from "@/components/ui/input";
 import { useContacts } from "@/store/contacts.store";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { SERVER_URL } from "@/lib/server";
 import { getKeyFingerprint } from "@/lib/crypto";
 import { decode } from "@stablelib/base64";
-import { publicKeySchema } from "@/lib/schemas";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { encode } from "@stablelib/base64";
 import { useAuth } from "@/store/auth.store";
+import { Contact } from "@/lib/types";
+
+const addContactSchema = z.object({
+  name: z.string().min(1, "Contact name is required"),
+  publicKey: z.string().min(1, "Public key is required"),
+});
+
+type AddContactForm = z.infer<typeof addContactSchema>;
 
 export const AddContact = () => {
   const { addContact, isInContacts } = useContacts();
-  const { username } = useAuth();
+  const { getKeyPair } = useAuth();
 
-  const contactForm = useForm({
-    defaultValues: {
-      contact: "",
-    },
+  const keyPair = getKeyPair();
+  const myPublicKey = keyPair ? encode(keyPair.publicKey) : "";
+
+  const contactForm = useForm<AddContactForm>({
+    resolver: zodResolver(addContactSchema),
+    defaultValues: { name: "", publicKey: "" },
   });
 
-  const handleAddContact = async (data: { contact: string }) => {
-    const contact = data.contact.trim();
+  const handleAddContact = async (data: AddContactForm) => {
+    const contactName = data.name.trim();
+    const publicKey = data.publicKey.trim();
 
-    if (contact === username) {
+    if (publicKey === myPublicKey) {
       toast.error("You cannot add yourself as a contact");
       return;
     }
 
-    if (isInContacts(contact)) {
+    if (isInContacts(publicKey)) {
       toast.error("Contact already exists");
       return;
     }
 
     try {
-      const userResponse = await fetch(`${SERVER_URL}/user/${contact}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!userResponse.ok) {
-        throw new Error("User not found");
-      }
-
-      const keyResponse = await fetch(`${SERVER_URL}/public-key/${contact}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!keyResponse.ok) {
-        throw new Error("Public key not found");
-      }
-
-      const keyData = await keyResponse.json();
-      const { publicKey } = publicKeySchema.parse(keyData);
       const decodedPublicKey = decode(publicKey);
       const fingerprint = getKeyFingerprint(decodedPublicKey);
 
-      // Check stored fingerprint
-      const storedFingerprint = localStorage.getItem(`fingerprint_${contact}`);
-      if (storedFingerprint && storedFingerprint !== fingerprint) {
-        toast.error(`Warning: Public key for ${contact} has changed!`);
-        return;
-      }
-
-      // Store fingerprint and add contact
-      localStorage.setItem(`fingerprint_${contact}`, fingerprint);
+      const contact: Contact = { username: contactName, publicKey };
+      localStorage.setItem(`fingerprint_${publicKey}`, fingerprint);
       addContact(contact);
+      toast.success(`Added ${contactName} with public key`);
       contactForm.reset();
-      toast.success(`Added ${contact} to contacts`);
     } catch {
-      toast.error("User not found");
+      toast.error("Invalid public key format");
     }
   };
 
@@ -89,18 +74,39 @@ export const AddContact = () => {
       >
         <FormField
           control={contactForm.control}
-          name="contact"
+          name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Add Contact</FormLabel>
+              <FormLabel>Custom Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., ShadowFriend" {...field} />
+                <Input placeholder="e.g., Friend1" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit">Add Contact</Button>
+        <FormField
+          control={contactForm.control}
+          name="publicKey"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Public Key</FormLabel>
+              <FormControl>
+                <Input placeholder="Paste public key" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button
+          type="submit"
+          disabled={
+            !contactForm.watch("name").trim() ||
+            !contactForm.watch("publicKey").trim()
+          }
+        >
+          Add Contact
+        </Button>
       </form>
     </Form>
   );

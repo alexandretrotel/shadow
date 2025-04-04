@@ -1,17 +1,18 @@
 import { create } from "zustand";
 
 interface OnlineStore {
-  onlineUsers: string[];
-  setOnlineUsers: (users: string[]) => void;
-  isOnline: (username: string) => boolean;
+  onlinePublicKeys: string[];
+  setOnlinePublicKeys: (publicKeys: string[]) => void;
+  isOnline: (publicKey: string) => boolean;
 }
 
 export const useOnline = create<OnlineStore>((set, get) => ({
-  onlineUsers: [],
+  onlinePublicKeys: [],
 
-  setOnlineUsers: (users: string[]) => set({ onlineUsers: users }),
+  setOnlinePublicKeys: (publicKeys: string[]) =>
+    set({ onlinePublicKeys: publicKeys }),
 
-  isOnline: (username: string) => {
-    return get().onlineUsers.includes(username);
+  isOnline: (publicKey: string) => {
+    return get().onlinePublicKeys.includes(publicKey);
   },
 }));

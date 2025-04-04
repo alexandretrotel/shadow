@@ -5,3 +5,8 @@ export interface Message {
   status?: "sent" | "delivered" | "failed" | "received";
   timestamp?: string;
 }
+
+export interface Contact {
+  username: string;
+  publicKey: string;
+}
