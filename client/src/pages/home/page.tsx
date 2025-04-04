@@ -11,10 +11,10 @@ export const Home = () => {
   const { contacts } = useContacts();
   const { getKeyPair } = useAuth();
   const navigate = useNavigate();
-
   const keyPair = getKeyPair();
-  const startChat = (publicKey: string) => {
-    navigate(`/chat/${publicKey}`);
+
+  const startChat = (contact: string) => {
+    navigate(`/chat/${contact}`);
   };
 
   if (!keyPair) {

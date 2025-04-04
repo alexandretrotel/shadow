@@ -35,7 +35,7 @@ export const ContactsList = ({ contacts, startChat }: ContactsListProps) => {
             <Button
               variant="ghost"
               className="text-muted-foreground hover:text-foreground"
-              onClick={() => startChat(contact.publicKey)}
+              onClick={() => startChat(contact.username)}
             >
               Chat
             </Button>
