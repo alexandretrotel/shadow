@@ -30,7 +30,7 @@ export const Root = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useInitializeSocket();
-  const { username, loadAuth } = useAuth();
+  const { loadAuth, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -44,10 +44,10 @@ export const Root = () => {
   useEffect(() => {
     const encrypted = localStorage.getItem("auth-storage");
 
-    if (encrypted && !username) {
+    if (encrypted && !isAuthenticated) {
       setIsPasswordModalOpen(true);
     }
-  }, [username]);
+  }, [isAuthenticated]);
 
   const handlePasswordSubmit = async (data: FormSchema) => {
     const { password } = data;

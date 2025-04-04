@@ -2,6 +2,7 @@ import { create } from "zustand";
 import nacl from "tweetnacl";
 
 interface AuthStore {
+  isAuthenticated: boolean;
   keyPair: nacl.BoxKeyPair | null;
   setAuth: (keyPair: nacl.BoxKeyPair, password: string) => Promise<void>;
   loadAuth: (password: string) => Promise<void>;
@@ -101,6 +102,7 @@ const toUint8Array = (obj: any): Uint8Array => {
 };
 
 export const useAuth = create<AuthStore>((set, get) => ({
+  isAuthenticated: false,
   keyPair: null,
 
   setAuth: async (keyPair: nacl.BoxKeyPair, password: string) => {
@@ -127,7 +129,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
       publicKey: toUint8Array(state.keyPair.publicKey),
       secretKey: toUint8Array(state.keyPair.secretKey),
     };
-    set({ keyPair: reconstructedKeyPair });
+    set({ keyPair: reconstructedKeyPair, isAuthenticated: true });
   },
 
   getKeyPair: () => {
@@ -136,7 +138,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
   },
 
   clearAuth: () => {
-    set({ keyPair: null });
+    set({ keyPair: null, isAuthenticated: false });
     localStorage.removeItem("auth-storage");
   },
 }));
