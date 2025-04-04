@@ -84,11 +84,12 @@ export const useInitializeSocket = () => {
   const { initialize, socket, closeSocket } = useSocket.getState();
   const { getKeyPair } = useAuth();
 
-  useEffect(() => {
-    const keyPair = getKeyPair();
+  const keyPair = getKeyPair();
 
+  useEffect(() => {
     if (keyPair && !socket) {
       const publicKey = encode(keyPair?.publicKey);
+
       initialize(publicKey);
     }
 
@@ -97,5 +98,5 @@ export const useInitializeSocket = () => {
         closeSocket();
       }
     };
-  }, [closeSocket, getKeyPair, initialize, socket]);
+  }, [closeSocket, getKeyPair, initialize, keyPair, socket]);
 };

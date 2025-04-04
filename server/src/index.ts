@@ -6,7 +6,7 @@ import { setupRoutes } from "./api/routes";
 import { setupSockets } from "./api/sockets";
 
 function getCorsOrigins() {
-  const env = process.env.NODE_ENV || "production"; // Default to "production" if not set
+  const env = process.env.NODE_ENV || "development";
 
   switch (env) {
     case "production":
@@ -15,7 +15,7 @@ function getCorsOrigins() {
         "https://shadow-backend.alexandretrotel.org", // Production backend
       ];
     default:
-      return "*"; // Development or fallback (e.g., localhost)
+      return "*"; // Allow all origins in development
   }
 }
 

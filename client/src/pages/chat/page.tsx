@@ -90,8 +90,10 @@ export const Chat = () => {
         .on("message", (msg: Message) => addMessage(recipient, msg));
       socket.off("typing").on("typing", () => setIsTyping(true));
       socket.off("stopTyping").on("stopTyping", () => setIsTyping(false));
-      socket.off("recipientOffline").on("recipientOffline", ({ recipient }) => {
-        toast.error(`Message could not be delivered. ${recipient} is offline.`);
+      socket.off("recipientOffline").on("recipientOffline", () => {
+        toast.error(
+          `Message could not be delivered. Your recipient is offline.`,
+        );
       });
     };
 
