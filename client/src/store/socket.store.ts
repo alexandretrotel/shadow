@@ -24,7 +24,7 @@ export const useSocket = create<SocketStore>((set, get) => {
     closeSocket: () => {
       get().socket?.disconnect();
     },
-    initialize: (username: string) => {
+    initialize: (publicKey: string) => {
       const socket = io(SERVER_URL, {
         reconnection: true,
         reconnectionAttempts: Infinity,
@@ -35,16 +35,16 @@ export const useSocket = create<SocketStore>((set, get) => {
       set({ socket });
 
       socket.on("connect", () => {
-        if (username) {
-          socket.emit("register", username); // Register user on connect
+        if (publicKey) {
+          socket.emit("register", publicKey); // Register user on connect
         }
         debouncedToastSuccess("Connected to the server");
       });
 
       // Reconnect handler
       socket.on("reconnect", () => {
-        if (username) {
-          socket.emit("register", username); // Register user on reconnect
+        if (publicKey) {
+          socket.emit("register", publicKey); // Register user on reconnect
         }
         debouncedToastSuccess("Reconnected to the server");
       });
@@ -72,8 +72,8 @@ export const useSocket = create<SocketStore>((set, get) => {
       });
 
       // Listen for online users updates
-      socket.on("onlineUsers", (users: string[]) => {
-        useOnline.getState().setOnlineUsers(users);
+      socket.on("onlinePublicKeys", (publicKeys: string[]) => {
+        useOnline.getState().setOnlinePublicKeys(publicKeys);
       });
     },
   };

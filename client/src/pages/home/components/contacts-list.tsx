@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { Contact } from "@/lib/types";
 import { useOnline } from "@/store/online.store";
 
 interface ContactsListProps {
-  contacts: string[];
+  contacts: Contact[];
   startChat: (username: string) => void;
 }
 
@@ -16,22 +17,25 @@ export const ContactsList = ({ contacts, startChat }: ContactsListProps) => {
         <p className="text-muted-foreground text-sm">No contacts added yet.</p>
       ) : (
         contacts.map((contact) => (
-          <div key={contact} className="flex items-center justify-between py-2">
+          <div
+            key={contact.username}
+            className="flex items-center justify-between py-2"
+          >
             <div className="flex items-center gap-2">
               <span
                 className={`h-2 w-2 rounded-full ${
-                  isOnline(contact)
+                  isOnline(contact.publicKey)
                     ? "animate-pulse bg-green-500"
                     : "bg-gray-500"
                 }`}
               />
-              <span>{contact}</span>
+              <span>{contact.username}</span>
             </div>
 
             <Button
               variant="ghost"
               className="text-muted-foreground hover:text-foreground"
-              onClick={() => startChat(contact)}
+              onClick={() => startChat(contact.username)}
             >
               Chat
             </Button>

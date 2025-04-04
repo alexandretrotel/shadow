@@ -10,6 +10,7 @@ import { debounce } from "lodash";
 import { decryptMessage, encryptMessage } from "@/lib/crypto";
 import { usePublicKey } from "@/hooks/use-public-key";
 import { decode } from "@stablelib/base64";
+import { useContacts } from "@/store/contacts.store";
 
 export const Chat = () => {
   const { recipient } = useParams<{ recipient: string }>();
@@ -19,8 +20,12 @@ export const Chat = () => {
   const { socket, closeSocket } = useSocket();
   const { username, getKeyPair } = useAuth();
   const { messages, addMessage, updateMessageStatus } = useChat();
+  const { getContactPublicKey } = useContacts();
   const navigate = useNavigate();
-  const recipientPublicKey = usePublicKey(recipient);
+
+  const recipientPublicKeyFromDB = usePublicKey(recipient);
+  const localPublicKey = getContactPublicKey(recipient!);
+  const recipientPublicKey = localPublicKey || recipientPublicKeyFromDB;
 
   const keyPair = getKeyPair();
   const privateKey = keyPair?.secretKey;
@@ -35,7 +40,7 @@ export const Chat = () => {
           return;
         }
 
-        if (!recipientPublicKey || !privateKey) {
+        if (!recipientPublicKey || !privateKey || !publicKey) {
           toast.error("Recipient public key or your private key is missing");
           return;
         }
@@ -53,21 +58,28 @@ export const Chat = () => {
           status: "sent",
         };
 
-        socket.emit("message", { sender: username, recipient, message });
+        socket.emit("message", {
+          sender: publicKey,
+          recipient: recipientPublicKey,
+          message,
+        });
       }, 300),
-    [socket, username, recipient, recipientPublicKey, privateKey],
+    [socket, username, recipient, recipientPublicKey, privateKey, publicKey],
   );
 
   const debouncedHandleTyping = useMemo(
     () =>
       debounce(() => {
-        if (!socket || !username || !recipient) {
+        if (!socket || !recipientPublicKey || !publicKey) {
           toast.error("Connection or authentication issue");
           return;
         }
-        socket.emit("typing", { sender: username, recipient });
+        socket.emit("typing", {
+          sender: publicKey,
+          recipient: recipientPublicKey,
+        });
       }, 500),
-    [socket, username, recipient],
+    [socket, publicKey, recipientPublicKey],
   );
 
   useEffect(() => {
