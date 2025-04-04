@@ -1,8 +1,5 @@
 buildImage = "ghcr.io/railwayapp/nixpacks:ubuntu-1737417843"
 
-[variables]
-NODE_ENV = "production"
-
 [phases.setup]
 nixPkgs = ["bun"]
 aptPkgs = ["curl", "wget"]

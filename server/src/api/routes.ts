@@ -9,7 +9,9 @@ import { privateKeySchema, usernameAndPublicKeySchema } from "@/lib/schemas";
 
 export function setupRoutes(app: express.Express) {
   app.get("/", (req, res) => {
-    res.send("Welcome to the Shadow API!");
+    res.send(
+      `Shadow E2EE Chat Backend - Running in ${process.env.NODE_ENV || "production"} mode`
+    );
   });
 
   app.post("/register", async (req, res) => {

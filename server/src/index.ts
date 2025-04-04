@@ -5,6 +5,20 @@ import cors from "cors";
 import { setupRoutes } from "./api/routes";
 import { setupSockets } from "./api/sockets";
 
+function getCorsOrigins() {
+  const env = process.env.NODE_ENV || "production"; // Default to "production" if not set
+
+  switch (env) {
+    case "production":
+      return [
+        "https://shadow.alexandretrotel.org", // Production client
+        "https://shadow-backend.alexandretrotel.org", // Production backend
+      ];
+    default:
+      return "*"; // Development or fallback (e.g., localhost)
+  }
+}
+
 const app = express();
 app.use(
   cors({
