@@ -11,9 +11,5 @@
   "workspaces": [
     "server",
     "client"
-  ],
-  "dependencies": {
-    "react-router-dom": "^7.4.1",
-    "redis": "^5.1.0"
-  }
+  ]
 }
