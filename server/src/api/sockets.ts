@@ -1,5 +1,6 @@
 import type { Server } from "socket.io";
-import type { Message } from "../lib/types";
+import type { Message } from "@/lib/types";
+import { redis } from "@/lib/redis";
 
 interface ConnectedUsers {
   [publicKey: string]: string; // Maps public key to socket.id
@@ -17,18 +18,46 @@ export function setupSockets(io: Server) {
     console.log("User connected:", socket.id);
 
     // Register the user with their username
-    socket.on("register", (publicKey: string) => {
+    socket.on("register", async (publicKey: string) => {
       connectedPublicKeys[publicKey] = socket.id; // Store the user's public key and socket ID
       console.log(`User registered: ${publicKey} with socket ID: ${socket.id}`);
 
       // Broadcast updated online users list
       io.emit("onlinePublicKeys", Object.keys(connectedPublicKeys));
+
+      // Deliver queued messages to the user
+      try {
+        const queuedMessages = await redis.lRange(`queue:${publicKey}`, 0, -1);
+
+        if (queuedMessages.length > 0) {
+          console.log(
+            `Delivering ${queuedMessages.length} queued messages to ${publicKey}`
+          );
+
+          for (const json of queuedMessages) {
+            const message = JSON.parse(json);
+            io.to(socket.id).emit("message", {
+              ...message,
+              status: "received",
+            });
+          }
+
+          await redis.del(`queue:${publicKey}`);
+        }
+      } catch (err) {
+        console.error("Failed to load queued messages:", err);
+      }
     });
 
     // Handle user messages
     socket.on(
       "message",
-      (data: { sender: string; recipient: string; message: Message }) => {
+      async (data: {
+        sender: string;
+        recipient: string;
+        message: Message;
+        allowQueue?: boolean;
+      }) => {
         const senderSocketId = connectedPublicKeys[data.sender]; // Get sender's socket ID
         const recipientSocketId = connectedPublicKeys[data.recipient]; // Get recipient's socket ID
 
@@ -47,10 +76,20 @@ export function setupSockets(io: Server) {
             status: "received",
           });
         } else {
+          // Store the message in Redis if the recipient is offline
+          if (data.allowQueue) {
+            await redis.rPush(
+              `queue:${data.recipient}`,
+              JSON.stringify(data.message)
+            );
+            await redis.expire(`queue:${data.recipient}`, 86400 * 7); // 7 days
+          }
+
           // Notify the sender that the recipient is offline
           io.to(senderSocketId).emit("recipientOffline", {
             recipient: data.recipient,
             messageId: data.message.messageId,
+            queued: data.allowQueue === true,
           });
         }
       }

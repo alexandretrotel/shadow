@@ -13,6 +13,7 @@
     "client"
   ],
   "dependencies": {
-    "react-router-dom": "^7.4.1"
+    "react-router-dom": "^7.4.1",
+    "redis": "^5.1.0"
   }
 }
