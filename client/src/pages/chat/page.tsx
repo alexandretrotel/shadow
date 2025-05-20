@@ -10,6 +10,7 @@ import { debounce } from "lodash";
 import { decryptMessage, encryptMessage } from "@/lib/crypto";
 import { decode, encode } from "@stablelib/base64";
 import { useContacts } from "@/store/contacts.store";
+import { useQueue } from "@/store/queue.store";
 
 export const Chat = () => {
   const { recipient } = useParams<{ recipient: string }>();
@@ -19,6 +20,7 @@ export const Chat = () => {
   const { getKeyPair } = useAuth();
   const { messages, addMessage } = useChat();
   const { getContactPublicKey, getContactName } = useContacts();
+  const { isQueueEnabled } = useQueue();
   const navigate = useNavigate();
 
   const keyPair = getKeyPair();
@@ -56,9 +58,17 @@ export const Chat = () => {
           sender: publicKey,
           recipient: recipientPublicKey,
           message,
+          allowQueue: isQueueEnabled,
         });
       }, 300),
-    [socket, recipient, publicKey, recipientPublicKey, privateKey],
+    [
+      socket,
+      recipient,
+      publicKey,
+      recipientPublicKey,
+      privateKey,
+      isQueueEnabled,
+    ],
   );
 
   const debouncedHandleTyping = useMemo(
