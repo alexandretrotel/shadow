@@ -1,6 +1,7 @@
 import type { Server } from "socket.io";
 import type { Message } from "@/lib/types";
 import { redis } from "@/lib/redis";
+import { QUEUE_TTL } from "@/lib/data";
 
 interface ConnectedUsers {
   [publicKey: string]: string; // Maps public key to socket.id
@@ -82,7 +83,7 @@ export function setupSockets(io: Server) {
               `queue:${data.recipient}`,
               JSON.stringify(data.message)
             );
-            await redis.expire(`queue:${data.recipient}`, 86400 * 7); // 7 days
+            await redis.expire(`queue:${data.recipient}`, QUEUE_TTL);
           }
 
           // Notify the sender that the recipient is offline
