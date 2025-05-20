@@ -9,6 +9,9 @@ import { KeyDisplay } from "./components/key-display";
 import { QRCodeDisplay } from "./components/qrcode-display";
 import { useAuth } from "@/store/auth.store";
 import { getKeyFingerprint } from "@/lib/crypto";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useQueue } from "@/store/queue.store";
 
 export const Account = () => {
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -20,6 +23,7 @@ export const Account = () => {
 
   const navigate = useNavigate();
   const { keyPair } = useAuth();
+  const { isQueueEnabled, setQueueEnabled } = useQueue();
 
   useEffect(() => {
     if (keyPair) {
@@ -59,6 +63,13 @@ export const Account = () => {
     }
   };
 
+  const handleQueueToggle = (checked: boolean) => {
+    setQueueEnabled(checked);
+    toast.success(
+      checked ? "Message queuing enabled" : "Message queuing disabled",
+    );
+  };
+
   if (!keyPair) {
     navigate("/");
     return null;
@@ -84,6 +95,14 @@ export const Account = () => {
           onCopy={() => privateKey && handleCopy(privateKey, "private")}
           isPrivate
         />
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="queue-toggle"
+            checked={isQueueEnabled}
+            onCheckedChange={handleQueueToggle}
+          />
+          <Label htmlFor="queue-toggle">Enable message queuing</Label>
+        </div>
         <Button
           variant="ghost"
           className="mt-6 w-full py-3"
